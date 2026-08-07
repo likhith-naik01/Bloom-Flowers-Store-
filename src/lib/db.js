@@ -1,0 +1,412 @@
+import fs from 'fs';
+import path from 'path';
+import { INITIAL_CATEGORIES, INITIAL_PRODUCTS, INITIAL_BANNERS, INITIAL_ORDERS } from './sampleData.js';
+import { supabase } from './supabase.js';
+
+const DB_PATH = path.join(process.cwd(), 'data.json');
+const TMP_PATH = path.join(process.cwd(), 'data.json.tmp');
+
+let memoryCache = null;
+let lastMtime = 0;
+
+function readDb() {
+  try {
+    if (!fs.existsSync(DB_PATH)) {
+      const initialData = {
+        categories: INITIAL_CATEGORIES,
+        products: INITIAL_PRODUCTS,
+        banners: INITIAL_BANNERS,
+        orders: INITIAL_ORDERS,
+        admins: [
+          { username: 'admin_1', password: 'Ratik@2892' },
+          { username: 'Likhith', password: 'Likhith@0501' }
+        ]
+      };
+      fs.writeFileSync(DB_PATH, JSON.stringify(initialData, null, 2), 'utf-8');
+      memoryCache = initialData;
+      lastMtime = fs.statSync(DB_PATH).mtimeMs;
+      return initialData;
+    }
+
+    const stat = fs.statSync(DB_PATH);
+    if (memoryCache && stat.mtimeMs === lastMtime) {
+      return memoryCache;
+    }
+
+    const fileContent = fs.readFileSync(DB_PATH, 'utf-8');
+    memoryCache = JSON.parse(fileContent);
+    lastMtime = stat.mtimeMs;
+    return memoryCache;
+  } catch (error) {
+    console.error('Error reading DB file:', error);
+    if (memoryCache) return memoryCache;
+    return {
+      categories: INITIAL_CATEGORIES,
+      products: INITIAL_PRODUCTS,
+      banners: INITIAL_BANNERS,
+      orders: INITIAL_ORDERS,
+      admins: [
+        { username: 'admin_1', password: 'Ratik@2892' },
+        { username: 'Likhith', password: 'Likhith@0501' }
+      ]
+    };
+  }
+}
+
+function writeDb(data) {
+  try {
+    memoryCache = data;
+    const jsonString = JSON.stringify(data, null, 2);
+    fs.writeFileSync(TMP_PATH, jsonString, 'utf-8');
+    fs.renameSync(TMP_PATH, DB_PATH);
+    lastMtime = fs.statSync(DB_PATH).mtimeMs;
+  } catch (error) {
+    console.error('Error writing DB file:', error);
+    try {
+      fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), 'utf-8');
+      lastMtime = fs.statSync(DB_PATH).mtimeMs;
+    } catch (e) {
+      console.error('Fallback write error:', e);
+    }
+  }
+}
+
+export const db = {
+  // Categories
+  getCategories: async () => {
+    if (supabase) {
+      const { data, error } = await supabase.from('categories').select('*').order('created_at', { ascending: true });
+      if (!error && data) return data;
+    }
+    return readDb().categories || [];
+  },
+  addCategory: async (cat) => {
+    const newCat = { ...cat, id: cat.id || `cat_${Date.now()}` };
+    if (supabase) {
+      const { data, error } = await supabase.from('categories').insert([{
+        id: newCat.id,
+        name: newCat.name,
+        slug: newCat.slug || newCat.name.toLowerCase().replace(/\s+/g, '-'),
+        image: newCat.image || '',
+        description: newCat.description || ''
+      }]).select().single();
+      if (!error && data) return data;
+    }
+    const local = readDb();
+    local.categories = local.categories || [];
+    local.categories.push(newCat);
+    writeDb(local);
+    return newCat;
+  },
+  updateCategory: async (id, updated) => {
+    if (supabase) {
+      const { data, error } = await supabase.from('categories').update(updated).eq('id', id).select().single();
+      if (!error && data) return data;
+    }
+    const local = readDb();
+    local.categories = (local.categories || []).map(c => c.id === id ? { ...c, ...updated } : c);
+    writeDb(local);
+    return local.categories.find(c => c.id === id);
+  },
+  deleteCategory: async (id) => {
+    if (supabase) {
+      await supabase.from('categories').delete().eq('id', id);
+    }
+    const local = readDb();
+    local.categories = (local.categories || []).filter(c => c.id !== id);
+    writeDb(local);
+  },
+
+  // Products
+  getProducts: async () => {
+    if (supabase) {
+      const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+      if (!error && data) {
+        return data.map(p => ({
+          ...p,
+          imageUrl: p.image_url || (Array.isArray(p.images) && p.images[0] ? p.images[0] : ''),
+          categoryIds: p.category_ids || [],
+          unitVariants: p.unit_variants || [],
+          discountValue: Number(p.discount_value || 0),
+          inStock: p.in_stock !== false
+        }));
+      }
+    }
+    const prods = readDb().products || [];
+    return prods.map(p => ({
+      ...p,
+      categoryIds: Array.isArray(p.categoryIds) ? p.categoryIds : (p.categoryId ? [p.categoryId] : []),
+      images: Array.isArray(p.images) && p.images.length > 0 ? p.images : (p.imageUrl ? [p.imageUrl] : []),
+      imageUrl: p.imageUrl || (Array.isArray(p.images) && p.images[0] ? p.images[0] : ''),
+      unitVariants: Array.isArray(p.unitVariants) ? p.unitVariants : []
+    }));
+  },
+  getProductById: async (id) => {
+    if (supabase) {
+      const { data, error } = await supabase.from('products').select('*').eq('id', id).single();
+      if (!error && data) {
+        return {
+          ...data,
+          imageUrl: data.image_url || (Array.isArray(data.images) && data.images[0] ? data.images[0] : ''),
+          categoryIds: data.category_ids || [],
+          unitVariants: data.unit_variants || [],
+          discountValue: Number(data.discount_value || 0),
+          inStock: data.in_stock !== false
+        };
+      }
+    }
+    const products = await db.getProducts();
+    return products.find(p => p.id === id);
+  },
+  addProduct: async (prod) => {
+    const imagesList = Array.isArray(prod.images) && prod.images.length > 0 ? prod.images : (prod.imageUrl ? [prod.imageUrl] : []);
+    const categoryIdsList = Array.isArray(prod.categoryIds) && prod.categoryIds.length > 0 ? prod.categoryIds : (prod.categoryId ? [prod.categoryId] : []);
+    const newProd = {
+      ...prod,
+      id: prod.id || `prod_${Date.now()}`,
+      categoryIds: categoryIdsList,
+      images: imagesList,
+      imageUrl: imagesList[0] || '',
+      price: Number(prod.price),
+      discountValue: Number(prod.discountValue || 0),
+      unitVariants: Array.isArray(prod.unitVariants) ? prod.unitVariants : [],
+      inStock: prod.inStock !== false
+    };
+
+    if (supabase) {
+      const { data, error } = await supabase.from('products').insert([{
+        id: newProd.id,
+        name: newProd.name,
+        price: newProd.price,
+        discount_value: newProd.discountValue,
+        image_url: newProd.imageUrl,
+        images: newProd.images,
+        category_ids: newProd.categoryIds,
+        unit_variants: newProd.unitVariants,
+        in_stock: newProd.inStock,
+        description: newProd.description || ''
+      }]).select().single();
+      if (!error && data) return newProd;
+    }
+
+    const local = readDb();
+    local.products = local.products || [];
+    local.products.push(newProd);
+    writeDb(local);
+    return newProd;
+  },
+  updateProduct: async (id, updated) => {
+    if (supabase) {
+      const payload = {};
+      if (updated.name !== undefined) payload.name = updated.name;
+      if (updated.price !== undefined) payload.price = Number(updated.price);
+      if (updated.discountValue !== undefined) payload.discount_value = Number(updated.discountValue);
+      if (updated.imageUrl !== undefined) payload.image_url = updated.imageUrl;
+      if (updated.images !== undefined) payload.images = updated.images;
+      if (updated.categoryIds !== undefined) payload.category_ids = updated.categoryIds;
+      if (updated.unitVariants !== undefined) payload.unit_variants = updated.unitVariants;
+      if (updated.inStock !== undefined) payload.in_stock = updated.inStock;
+      if (updated.description !== undefined) payload.description = updated.description;
+
+      const { data, error } = await supabase.from('products').update(payload).eq('id', id).select().single();
+      if (!error && data) return db.getProductById(id);
+    }
+    const local = readDb();
+    local.products = (local.products || []).map(p => {
+      if (p.id === id) {
+        const imagesList = Array.isArray(updated.images) && updated.images.length > 0
+          ? updated.images
+          : (updated.imageUrl ? [updated.imageUrl] : (Array.isArray(p.images) ? p.images : [p.imageUrl]));
+        const categoryIdsList = Array.isArray(updated.categoryIds) && updated.categoryIds.length > 0
+          ? updated.categoryIds
+          : (updated.categoryId ? [updated.categoryId] : (Array.isArray(p.categoryIds) ? p.categoryIds : [p.categoryId]));
+
+        return {
+          ...p,
+          ...updated,
+          categoryIds: categoryIdsList,
+          images: imagesList,
+          imageUrl: imagesList[0] || p.imageUrl || '',
+          price: Number(updated.price !== undefined ? updated.price : p.price),
+          discountValue: Number(updated.discountValue !== undefined ? updated.discountValue : p.discountValue),
+          unitVariants: Array.isArray(updated.unitVariants) ? updated.unitVariants : p.unitVariants || []
+        };
+      }
+      return p;
+    });
+    writeDb(local);
+    return db.getProductById(id);
+  },
+  deleteProduct: async (id) => {
+    if (supabase) {
+      await supabase.from('products').delete().eq('id', id);
+    }
+    const local = readDb();
+    local.products = (local.products || []).filter(p => p.id !== id);
+    writeDb(local);
+  },
+
+  // Banners
+  getBanners: async () => {
+    if (supabase) {
+      const { data, error } = await supabase.from('banners').select('*').eq('active', true);
+      if (!error && data) return data;
+    }
+    return readDb().banners || [];
+  },
+  updateBanners: async (banners) => {
+    if (supabase) {
+      await supabase.from('banners').delete().neq('id', -1);
+      const { data, error } = await supabase.from('banners').insert(banners).select();
+      if (!error && data) return data;
+    }
+    const local = readDb();
+    local.banners = banners;
+    writeDb(local);
+    return local.banners;
+  },
+
+  // Orders
+  getOrders: async () => {
+    if (supabase) {
+      const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+      if (!error && data) {
+        return data.map(o => ({
+          id: o.id,
+          customerName: o.customer_name,
+          customerPhone: o.customer_phone,
+          customerAddress: o.customer_address,
+          deliveryDate: o.delivery_date,
+          items: o.items || [],
+          total: Number(o.total_amount || 0),
+          status: o.status,
+          paymentStatus: o.payment_status,
+          notes: o.notes,
+          createdAt: o.created_at
+        }));
+      }
+    }
+    return readDb().orders || [];
+  },
+  getOrderById: async (id) => {
+    if (supabase) {
+      const { data, error } = await supabase.from('orders').select('*').eq('id', id).single();
+      if (!error && data) {
+        return {
+          id: data.id,
+          customerName: data.customer_name,
+          customerPhone: data.customer_phone,
+          customerAddress: data.customer_address,
+          deliveryDate: data.delivery_date,
+          items: data.items || [],
+          total: Number(data.total_amount || 0),
+          status: data.status,
+          paymentStatus: data.payment_status,
+          notes: data.notes,
+          createdAt: data.created_at
+        };
+      }
+    }
+    return (readDb().orders || []).find(o => o.id === id);
+  },
+  getOrdersByPhone: async (phone) => {
+    const cleanPhone = phone.replace(/\D/g, '');
+    if (!cleanPhone) return [];
+    if (supabase) {
+      const { data, error } = await supabase.from('orders').select('*').ilike('customer_phone', `%${cleanPhone}%`).order('created_at', { ascending: false });
+      if (!error && data) {
+        return data.map(o => ({
+          id: o.id,
+          customerName: o.customer_name,
+          customerPhone: o.customer_phone,
+          customerAddress: o.customer_address,
+          deliveryDate: o.delivery_date,
+          items: o.items || [],
+          total: Number(o.total_amount || 0),
+          status: o.status,
+          paymentStatus: o.payment_status,
+          notes: o.notes,
+          createdAt: o.created_at
+        }));
+      }
+    }
+    const orders = readDb().orders || [];
+    return orders.filter(o => {
+      const p = (o.customerPhone || '').replace(/\D/g, '');
+      return p.includes(cleanPhone) || cleanPhone.includes(p);
+    });
+  },
+  createOrder: async (orderData) => {
+    const timestampSuffix = Date.now().toString().slice(-4);
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    const orderId = `FLW-${timestampSuffix}-${randomNum}`;
+    
+    const newOrder = {
+      ...orderData,
+      id: orderId,
+      status: 'new',
+      paymentStatus: 'cod',
+      createdAt: new Date().toISOString()
+    };
+
+    if (supabase) {
+      const { data, error } = await supabase.from('orders').insert([{
+        id: orderId,
+        customer_name: orderData.customerName,
+        customer_phone: orderData.customerPhone,
+        customer_address: orderData.customerAddress || orderData.deliveryAddress,
+        delivery_date: orderData.deliveryDate || null,
+        items: orderData.items || [],
+        total_amount: Number(orderData.total || 0),
+        status: 'new',
+        payment_status: 'cod',
+        notes: orderData.orderNote || orderData.notes || ''
+      }]).select().single();
+      if (!error && data) return newOrder;
+    }
+
+    const local = readDb();
+    local.orders = local.orders || [];
+    local.orders.unshift(newOrder);
+    writeDb(local);
+    return newOrder;
+  },
+  updateOrderStatus: async (id, status) => {
+    if (supabase) {
+      const { data, error } = await supabase.from('orders').update({ status }).eq('id', id).select().single();
+      if (!error && data) return db.getOrderById(id);
+    }
+    const local = readDb();
+    local.orders = (local.orders || []).map(o => o.id === id ? { ...o, status } : o);
+    writeDb(local);
+    return local.orders.find(o => o.id === id);
+  },
+  updateOrder: async (id, updatedFields) => {
+    if (supabase) {
+      const payload = {};
+      if (updatedFields.status !== undefined) payload.status = updatedFields.status;
+      if (updatedFields.paymentStatus !== undefined) payload.payment_status = updatedFields.paymentStatus;
+      if (updatedFields.notes !== undefined) payload.notes = updatedFields.notes;
+      const { data, error } = await supabase.from('orders').update(payload).eq('id', id).select().single();
+      if (!error && data) return db.getOrderById(id);
+    }
+    const local = readDb();
+    local.orders = (local.orders || []).map(o => o.id === id ? { ...o, ...updatedFields } : o);
+    writeDb(local);
+    return local.orders.find(o => o.id === id);
+  },
+
+  // Admin Auth
+  verifyAdmin: async (username, password) => {
+    if (supabase) {
+      const { data, error } = await supabase.from('admins').select('*').eq('username', username).eq('password', password).maybeSingle();
+      if (!error && data) return true;
+    }
+    const validAdmins = [
+      { username: 'admin_1', password: 'Ratik@2892' },
+      { username: 'Likhith', password: 'Likhith@0501' }
+    ];
+    return validAdmins.some(a => a.username === username && a.password === password);
+  }
+};
+

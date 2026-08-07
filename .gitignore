@@ -1,0 +1,17 @@
+# dependencies
+/node_modules
+/.pnpm-store
+
+# next.js build output
+/.next/
+/out/
+
+# production / local environment files
+.env*.local
+.env
+
+# temp / scratch files
+/data.json
+/data.json.tmp
+*.zip
+*.log
