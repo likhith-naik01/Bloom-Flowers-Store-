@@ -88,9 +88,14 @@ export default function ProductCard({ product }) {
         {/* Info */}
         <div className="flex-1 flex flex-col justify-between">
           <div>
-            <h3 className="font-bold text-sm text-white line-clamp-1 group-hover:text-rose-300 transition-colors">
-              {product.nameEn}
-            </h3>
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <span className="px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 font-black text-[10px] border border-rose-500/30">
+                SL-{product.slNo || 1}
+              </span>
+              <h3 className="font-bold text-sm text-white line-clamp-1 group-hover:text-rose-300 transition-colors flex-1">
+                {product.nameEn}
+              </h3>
+            </div>
             {(product.nameHi || product.nameKn) && (
               <p className="text-[11px] text-slate-400 font-medium line-clamp-1">
                 {[product.nameHi, product.nameKn].filter(Boolean).join(' • ')}

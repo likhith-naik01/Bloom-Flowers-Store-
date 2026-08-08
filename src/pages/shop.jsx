@@ -4,6 +4,7 @@ import Header from '../components/layout/Header';
 import BottomNav from '../components/layout/BottomNav';
 import ProductCard from '../components/customer/ProductCard';
 import { useShop } from '../context/ShopContext';
+import { matchProductSearch } from '../lib/orderHelper';
 import { Search } from 'lucide-react';
 
 export default function Shop() {
@@ -14,11 +15,7 @@ export default function Shop() {
   const filteredProducts = products.filter((p) => {
     const catIds = Array.isArray(p.categoryIds) ? p.categoryIds : (p.categoryId ? [p.categoryId] : []);
     const matchesCat = selectedCat === 'all' || catIds.includes(selectedCat);
-    const matchesSearch =
-      !search ||
-      p.nameEn.toLowerCase().includes(search.toLowerCase()) ||
-      (p.nameHi && p.nameHi.toLowerCase().includes(search.toLowerCase())) ||
-      (p.nameKn && p.nameKn.toLowerCase().includes(search.toLowerCase()));
+    const matchesSearch = matchProductSearch(p, search);
     return matchesCat && matchesSearch;
   });
 
@@ -39,7 +36,7 @@ export default function Shop() {
             <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Search Gulabi, Jasmine, Sevanthige..."
+              placeholder="Search flowers by Name or SL No (e.g. SL-1, Jasmine, Chendu)..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-panel text-sm text-white placeholder-slate-400 focus:outline-none border border-white/10"

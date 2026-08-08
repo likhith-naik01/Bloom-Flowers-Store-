@@ -49,6 +49,7 @@ export default function AdminDashboard() {
   const [saveToast, setSaveToast] = useState('');
   const [prodSectionFilter, setProdSectionFilter] = useState('all');
   const [prodCatFilter, setProdCatFilter] = useState('all');
+  const [adminProdSearch, setAdminProdSearch] = useState('');
 
   useEffect(() => {
     if (!authLoading && !isAdmin) {
@@ -277,7 +278,7 @@ export default function AdminDashboard() {
             </button>
           </div>
 
-          {/* Navigation Tabs (Ordered exactly matching Homepage layout) */}
+          {/* Navigation Tabs */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none mb-4">
             <button
               onClick={() => setActiveTab('orders_active')}
@@ -478,18 +479,20 @@ export default function AdminDashboard() {
           {/* TAB 3: Products & Stock Control */}
           {activeTab === 'products' && (() => {
             const displayedProducts = products.filter((p) => {
-              const pCatIds = Array.isArray(p.categoryIds) ? p.categoryIds : (p.categoryId ? [p.categoryId] : []);
-              const isDiscounted = (Number(p.discountValue) > 0 || (p.discountType && p.discountType !== 'none'));
-              
+              const isSpecial = p.discountType !== 'none' && Number(p.discountValue) > 0;
               const matchesSection =
                 prodSectionFilter === 'all'
                   ? true
                   : prodSectionFilter === 'regular'
-                  ? !isDiscounted
-                  : isDiscounted;
-                  
+                  ? !isSpecial
+                  : isSpecial;
+              
+              const pCatIds = Array.isArray(p.categoryIds) ? p.categoryIds : (p.categoryId ? [p.categoryId] : []);
               const matchesCat = prodCatFilter === 'all' || pCatIds.includes(prodCatFilter);
-              return matchesSection && matchesCat;
+
+              const matchesSearch = !adminProdSearch || matchProductSearch(p, adminProdSearch);
+                  
+              return matchesSection && matchesCat && matchesSearch;
             });
 
             const regularCount = products.filter(p => p.discountType === 'none' || !Number(p.discountValue)).length;
@@ -563,6 +566,16 @@ export default function AdminDashboard() {
                       ))}
                     </select>
                   </div>
+
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search products by Name or SL No (e.g. SL-1)..."
+                      value={adminProdSearch}
+                      onChange={(e) => setAdminProdSearch(e.target.value)}
+                      className="w-full pl-3 pr-3 py-1.5 rounded-xl bg-slate-900 text-xs text-white placeholder-slate-400 border border-white/10 focus:outline-none"
+                    />
+                  </div>
                 </div>
 
                 {/* Product Cards List */}
@@ -593,6 +606,9 @@ export default function AdminDashboard() {
 
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                              <span className="px-1.5 py-0.2 rounded-md bg-rose-500/20 text-rose-300 font-extrabold text-[10px] border border-rose-500/30">
+                                SL-{p.slNo || 1}
+                              </span>
                               <h3 className="font-bold text-sm text-white truncate">{p.nameEn}</h3>
                               <span className={`px-1.5 py-0.2 rounded-md text-[9px] font-extrabold ${
                                 isSpecial ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-slate-700/60 text-slate-300'

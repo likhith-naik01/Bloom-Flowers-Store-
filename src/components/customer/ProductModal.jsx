@@ -109,7 +109,12 @@ export default function ProductModal({ product, onClose }) {
         )}
 
         <div>
-          <h2 className="text-xl font-extrabold text-white">{product.nameEn}</h2>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 font-extrabold text-xs border border-rose-500/30">
+              SL-{product.slNo || 1}
+            </span>
+            <h2 className="text-xl font-extrabold text-white">{product.nameEn}</h2>
+          </div>
           {(product.nameHi || product.nameKn) && (
             <p className="text-xs text-rose-300 font-medium mt-0.5">
               {[product.nameHi, product.nameKn].filter(Boolean).join(' • ')}

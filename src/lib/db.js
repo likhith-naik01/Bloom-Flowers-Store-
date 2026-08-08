@@ -205,8 +205,9 @@ export const db = {
     if (supabase) {
       const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
       if (!error && data && data.length > 0) {
-        return data.map(p => ({
+        return data.map((p, idx) => ({
           ...p,
+          slNo: Number(p.sl_no || p.slNo || (idx + 1)),
           nameEn: p.name || p.nameEn || '',
           nameHi: p.nameHi || '',
           nameKn: p.nameKn || '',
@@ -259,8 +260,9 @@ export const db = {
       }
     }
     const prods = readDb().products || [];
-    return prods.map(p => ({
+    return prods.map((p, idx) => ({
       ...p,
+      slNo: Number(p.sl_no || p.slNo || (idx + 1)),
       nameEn: p.nameEn || p.name || '',
       categoryIds: Array.isArray(p.categoryIds) ? p.categoryIds : (p.categoryId ? [p.categoryId] : []),
       images: Array.isArray(p.images) && p.images.length > 0 ? p.images : (p.imageUrl ? [p.imageUrl] : []),
@@ -275,6 +277,7 @@ export const db = {
       if (!error && data) {
         return {
           ...data,
+          slNo: Number(data.sl_no || data.slNo || 1),
           nameEn: data.name || data.nameEn || '',
           imageUrl: data.image_url || (Array.isArray(data.images) && data.images[0] ? data.images[0] : ''),
           images: Array.isArray(data.images) && data.images.length > 0 ? data.images : (data.image_url ? [data.image_url] : []),
@@ -294,9 +297,14 @@ export const db = {
     const categoryIdsList = Array.isArray(prod.categoryIds) && prod.categoryIds.length > 0 ? prod.categoryIds : (prod.categoryId ? [prod.categoryId] : []);
     const productName = prod.nameEn || prod.name || 'Flower Item';
 
+    const existingProds = await db.getProducts();
+    const maxSl = existingProds.reduce((max, item) => Math.max(max, Number(item.slNo || 0)), 0);
+    const assignedSlNo = prod.slNo ? Number(prod.slNo) : (maxSl + 1);
+
     const newProd = {
       ...prod,
       id: prod.id || `prod_${Date.now()}`,
+      slNo: assignedSlNo,
       name: productName,
       nameEn: productName,
       categoryIds: categoryIdsList,
@@ -313,6 +321,7 @@ export const db = {
       try {
         const { data, error } = await supabase.from('products').insert([{
           id: newProd.id,
+          sl_no: newProd.slNo,
           name: productName,
           price: newProd.price,
           unit: newProd.unit || 'bunch',
@@ -355,6 +364,7 @@ export const db = {
       try {
         const payload = {};
         if (productName !== undefined) payload.name = productName;
+        if (updated.slNo !== undefined) payload.sl_no = Number(updated.slNo);
         if (updated.price !== undefined) payload.price = Number(updated.price);
         if (updated.unit !== undefined) payload.unit = updated.unit;
         if (updated.discountType !== undefined) payload.discount_type = updated.discountType;
@@ -383,6 +393,7 @@ export const db = {
           ...updated,
           name: productName || p.name,
           nameEn: productName || p.nameEn || p.name,
+          slNo: updated.slNo !== undefined ? Number(updated.slNo) : (p.slNo || 1),
           unit: updated.unit !== undefined ? updated.unit : (p.unit || 'bunch'),
           categoryIds: categoryIdsList.length > 0 ? categoryIdsList : p.categoryIds || [],
           images: imagesList.length > 0 ? imagesList : p.images || [],
@@ -531,9 +542,16 @@ export const db = {
     });
   },
   createOrder: async (orderData) => {
-    const timestampSuffix = Date.now().toString().slice(-4);
-    const randomNum = Math.floor(1000 + Math.random() * 9000);
-    const orderId = `FLW-${timestampSuffix}-${randomNum}`;
+    let orderCount = 0;
+    try {
+      const existingOrders = await db.getOrders();
+      orderCount = Array.isArray(existingOrders) ? existingOrders.length : 0;
+    } catch (e) {
+      console.warn('Order count fallback:', e);
+    }
+    const nextNum = orderCount + 1;
+    const paddedStr = String(nextNum).padStart(8, '0');
+    const orderId = `FLW-${paddedStr.slice(0, 4)}-${paddedStr.slice(4)}`;
     
     const newOrder = {
       ...orderData,

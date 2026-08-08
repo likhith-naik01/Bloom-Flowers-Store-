@@ -86,6 +86,7 @@ export const INITIAL_PRODUCTS = [
   // 1. Gulabi (Rose)
   {
     id: "prod_rose_red",
+    slNo: 1,
     categoryIds: ["cat_pooja_flowers", "cat_anniversary"],
     nameEn: "Gulabi (Red Roses)",
     nameHi: "Gulabi",
@@ -113,6 +114,7 @@ export const INITIAL_PRODUCTS = [
   // 2. Sevanthige (Chrysanthemum)
   {
     id: "prod_sevanthige",
+    slNo: 2,
     categoryIds: ["cat_pooja_flowers"],
     nameEn: "Sevanthige (Yellow Chrysanthemum)",
     nameHi: "Sevanthige",
@@ -140,6 +142,7 @@ export const INITIAL_PRODUCTS = [
   // 3. Jasmine (Mallige)
   {
     id: "prod_malle",
+    slNo: 3,
     categoryIds: ["cat_pooja_flowers", "cat_garlands"],
     nameEn: "Mallige / Malle (Fragrant Jasmine Buds)",
     nameHi: "Chameli / Jasmine",
@@ -166,6 +169,7 @@ export const INITIAL_PRODUCTS = [
   // 4. Marigold (Chendu Hoovu)
   {
     id: "prod_marigold",
+    slNo: 4,
     categoryIds: ["cat_pooja_flowers"],
     nameEn: "Chendu Hoovu / Marigold",
     nameHi: "Genda Phool",
@@ -191,6 +195,7 @@ export const INITIAL_PRODUCTS = [
   // 5. Lotus (Kamala)
   {
     id: "prod_lotus",
+    slNo: 5,
     categoryIds: ["cat_pooja_flowers"],
     nameEn: "Kamala (Sacred Lotus Flowers)",
     nameHi: "Kamal Ka Phool",
@@ -215,6 +220,7 @@ export const INITIAL_PRODUCTS = [
   // Bouquets Section
   {
     id: "prod_rose_bouquet",
+    slNo: 6,
     categoryIds: ["cat_bouquets", "cat_anniversary", "cat_birthday"],
     nameEn: "Classic Red Rose Bouquet",
     nameHi: "Gulab Guldasta",
@@ -239,6 +245,7 @@ export const INITIAL_PRODUCTS = [
   },
   {
     id: "prod_lily_bouquet",
+    slNo: 7,
     categoryIds: ["cat_bouquets", "cat_birthday"],
     nameEn: "Royal Pink Lily & Rose Bouquet",
     nameHi: "Lily Guldasta",
@@ -263,6 +270,7 @@ export const INITIAL_PRODUCTS = [
   // Wedding Varmala
   {
     id: "prod_wedding_varmala",
+    slNo: 8,
     categoryIds: ["cat_wedding", "cat_garlands"],
     nameEn: "Grand Rose & Jasmine Varmala Pair",
     nameHi: "Shadi Rose Jasmine Varmala",
@@ -287,6 +295,7 @@ export const INITIAL_PRODUCTS = [
   // Leaves
   {
     id: "prod_bilva",
+    slNo: 9,
     categoryIds: ["cat_pooja_leaves"],
     nameEn: "Bilva Patra / Bel Patra (21 & 108 Sprigs)",
     nameHi: "Bel Patra",
@@ -309,6 +318,7 @@ export const INITIAL_PRODUCTS = [
   },
   {
     id: "prod_tulsi",
+    slNo: 10,
     categoryIds: ["cat_pooja_leaves"],
     nameEn: "Tulasi Leaves & Manjari Pack",
     nameHi: "Tulsi Patte",
@@ -333,6 +343,7 @@ export const INITIAL_PRODUCTS = [
   // Complete Pooja Kits
   {
     id: "prod_ganesh_kit",
+    slNo: 11,
     categoryIds: ["cat_pooja_kits"],
     nameEn: "Ganesh Pooja Complete Kit",
     nameHi: "Ganesh Pooja Samagri Kit",

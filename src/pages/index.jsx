@@ -6,6 +6,7 @@ import BannerCarousel from '../components/customer/BannerCarousel';
 import CategoryCardGrid from '../components/customer/CategoryCardGrid';
 import ProductCard from '../components/customer/ProductCard';
 import { useShop } from '../context/ShopContext';
+import { matchProductSearch } from '../lib/orderHelper';
 import { Search, Sparkles, Tag } from 'lucide-react';
 
 export default function Home() {
@@ -17,12 +18,7 @@ export default function Home() {
   );
 
   const filteredProducts = search
-    ? products.filter(
-        (p) =>
-          p.nameEn.toLowerCase().includes(search.toLowerCase()) ||
-          (p.nameHi && p.nameHi.toLowerCase().includes(search.toLowerCase())) ||
-          (p.nameKn && p.nameKn.toLowerCase().includes(search.toLowerCase()))
-      )
+    ? products.filter((p) => matchProductSearch(p, search))
     : [];
 
   return (
@@ -41,7 +37,7 @@ export default function Home() {
             <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Search Gulabi, Sevanthige, Haras, Lily..."
+              placeholder="Search flowers by Name or SL No (e.g. SL-1, Jasmine, Chendu)..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-panel text-sm text-white placeholder-slate-400 focus:outline-none focus:border-rose-500/50 transition-all border border-white/10"
