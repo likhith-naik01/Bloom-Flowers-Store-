@@ -36,24 +36,25 @@ export default function CategoryCardGrid({ categories = [] }) {
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-transparent z-10" />
 
-            <div className="relative z-20 flex justify-end">
-              <span className="w-6 h-6 rounded-full bg-rose-500/20 text-rose-300 flex items-center justify-center group-hover:bg-rose-500 group-hover:text-white transition-colors">
-                <ChevronRight className="w-3.5 h-3.5" />
-              </span>
-            </div>
-
-            <div className="relative z-20">
-              <h3 className="text-sm font-bold text-white group-hover:text-rose-300 transition-colors line-clamp-1">
-                {cat.nameEn}
-              </h3>
-              {(cat.nameHi || cat.nameKn) && (
-                <span className="text-[10px] text-slate-300 font-medium block opacity-90">
-                  {[cat.nameHi, cat.nameKn].filter(Boolean).join(' • ')}
+              <div className="relative z-20 flex justify-end">
+                <span className="w-6 h-6 rounded-full bg-rose-500/20 text-rose-300 flex items-center justify-center group-hover:bg-rose-500 group-hover:text-white transition-colors">
+                  <ChevronRight className="w-3.5 h-3.5" />
                 </span>
-              )}
-            </div>
-          </Link>
-        ))}
+              </div>
+
+              <div className="relative z-20">
+                <h3 className="text-sm font-bold text-white group-hover:text-rose-300 transition-colors line-clamp-1">
+                  {cat.nameEn || cat.name}
+                </h3>
+                {(cat.nameHi || cat.nameKn) && (
+                  <span className="text-[10px] text-slate-300 font-medium block opacity-90">
+                    {[cat.nameHi, cat.nameKn].filter(Boolean).join(' • ')}
+                  </span>
+                )}
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

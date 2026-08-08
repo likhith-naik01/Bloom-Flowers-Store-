@@ -327,18 +327,52 @@ export const db = {
   getBanners: async () => {
     if (supabase) {
       const { data, error } = await supabase.from('banners').select('*').eq('active', true);
-      if (!error && data) return data;
+      if (!error && data && data.length > 0) {
+        return data.map(b => ({
+          ...b,
+          imageUrl: b.image_url || b.imageUrl || '',
+          title: b.title || '',
+          subtitle: b.subtitle || '',
+          badge: b.badge || ''
+        }));
+      }
     }
-    return readDb().banners || [];
+    const localBanners = readDb().banners || [];
+    return localBanners.map(b => ({
+      ...b,
+      imageUrl: b.imageUrl || b.image_url || '',
+      title: b.title || '',
+      subtitle: b.subtitle || '',
+      badge: b.badge || ''
+    }));
   },
   updateBanners: async (banners) => {
+    const formattedBanners = banners.map(b => ({
+      title: b.title || '',
+      subtitle: b.subtitle || '',
+      badge: b.badge || '',
+      image_url: b.imageUrl || b.image_url || '',
+      active: true
+    }));
+
     if (supabase) {
       await supabase.from('banners').delete().neq('id', -1);
-      const { data, error } = await supabase.from('banners').insert(banners).select();
-      if (!error && data) return data;
+      const { data, error } = await supabase.from('banners').insert(formattedBanners).select();
+      if (error) {
+        console.error('Supabase updateBanners error:', error);
+      }
+      if (!error && data) {
+        return data.map(b => ({
+          ...b,
+          imageUrl: b.image_url || b.imageUrl || ''
+        }));
+      }
     }
     const local = readDb();
-    local.banners = banners;
+    local.banners = banners.map(b => ({
+      ...b,
+      imageUrl: b.imageUrl || b.image_url || ''
+    }));
     writeDb(local);
     return local.banners;
   },

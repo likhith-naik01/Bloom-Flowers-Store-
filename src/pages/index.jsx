@@ -13,7 +13,7 @@ export default function Home() {
   const [search, setSearch] = useState('');
 
   const saleProducts = products.filter(
-    (p) => p.inStock && (p.discountType === 'percent' || p.discountType === 'flat') && p.discountValue > 0
+    (p) => p.inStock && (Number(p.discountValue) > 0 || (p.discountType && p.discountType !== 'none'))
   );
 
   const filteredProducts = search
