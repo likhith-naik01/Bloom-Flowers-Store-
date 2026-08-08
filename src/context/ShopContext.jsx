@@ -12,26 +12,75 @@ export function ShopProvider({ children }) {
   
   const notifiedOrderIdsRef = useRef(new Set());
   const initialFetchDone = useRef(false);
+  const audioCtxRef = useRef(null);
 
-  // Web Audio Synthesized Chime Sound (Zero external file dependencies)
+  // Initialize & Unlock AudioContext on first user interaction (bypasses browser autoplay blocks)
+  const initAudio = () => {
+    try {
+      if (!audioCtxRef.current && typeof window !== 'undefined') {
+        audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+        audioCtxRef.current.resume();
+      }
+    } catch (e) {
+      console.log('Audio init error:', e);
+    }
+  };
+
+  useEffect(() => {
+    const unlockAudio = () => {
+      initAudio();
+      window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('touchstart', unlockAudio);
+    };
+    window.addEventListener('click', unlockAudio);
+    window.addEventListener('touchstart', unlockAudio);
+    return () => {
+      window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('touchstart', unlockAudio);
+    };
+  }, []);
+
+  // Web Audio Synthesized 2-Tone Bell Chime ("Ding-Dong!" 🔔)
   const playOrderChime = () => {
     try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
+      initAudio();
+      const ctx = audioCtxRef.current || new (window.AudioContext || window.webkitAudioContext)();
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
 
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5 note
-      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); // A5 note
+      const now = ctx.currentTime;
 
-      gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+      // Bell Tone 1: E5 (659.25 Hz)
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(659.25, now);
+      gain1.gain.setValueAtTime(0.5, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.35);
 
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
+      // Bell Tone 2: A5 (880.00 Hz) - High Chime 0.15s later
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(880.00, now + 0.15);
+      gain2.gain.setValueAtTime(0.6, now + 0.15);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.start(now + 0.15);
+      osc2.stop(now + 0.75);
 
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.8);
+      // Mobile Device Physical Vibration
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        navigator.vibrate([250, 100, 250]);
+      }
     } catch (e) {
       console.log('Audio chime error:', e);
     }
@@ -43,7 +92,8 @@ export function ShopProvider({ children }) {
       if (Notification.permission === 'granted') {
         new Notification(`🌸 New Order Received! #${order.id}`, {
           body: `Customer: ${order.customerName} | Total: ₹${order.total}`,
-          icon: '/favicon.ico'
+          icon: '/favicon.ico',
+          vibrate: [250, 100, 250]
         });
       }
     }
