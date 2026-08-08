@@ -352,7 +352,20 @@ export const db = {
           return newProd;
         }
 
-        console.error('Supabase addProduct insert errors:', res1.error, res2.error);
+        // Minimal fallback with standard columns in case custom columns are missing
+        const res3 = await supabase.from('products').insert([{
+          id: newProd.id,
+          name: productName,
+          price: newProd.price,
+          unit: newProd.unit || 'piece',
+          image_url: newProd.imageUrl,
+          description: newProd.description || ''
+        }]).select().single();
+        if (!res3.error && res3.data) {
+          return newProd;
+        }
+
+        console.error('Supabase addProduct insert errors:', res1.error, res2.error, res3.error);
       } catch (err) {
         console.error('Supabase addProduct exception:', err);
       }
