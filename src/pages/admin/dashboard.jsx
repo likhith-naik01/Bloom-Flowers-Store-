@@ -151,9 +151,12 @@ export default function AdminDashboard() {
       if (res.ok) {
         await refreshData();
         triggerToast('✅ Promotional Banner updated successfully!');
+      } else {
+        alert('Failed to update banner wallpaper. Please try again.');
       }
     } catch (e) {
       console.error(e);
+      alert('Error saving banner wallpaper: ' + e.message);
     }
   };
 

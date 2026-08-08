@@ -25,7 +25,7 @@ export default function BannerManager({ banners = [], onSaveBanners }) {
     if (!file) return;
     setUploading(true);
     try {
-      const compressedData = await compressImage(file, 1200, 600, 0.85);
+      const compressedData = await compressImage(file, 800, 400, 0.78);
       if (!compressedData) {
         setUploading(false);
         return;
@@ -99,8 +99,8 @@ export default function BannerManager({ banners = [], onSaveBanners }) {
 
       {/* Live Preview */}
       {imageUrl && (
-        <div className="relative w-full h-36 rounded-2xl overflow-hidden border border-white/10 shadow-lg">
-          <Image src={imageUrl} alt="Banner Preview" fill className="object-cover" />
+        <div className="relative w-full h-36 rounded-2xl overflow-hidden border border-white/10 shadow-lg bg-slate-900">
+          <img src={imageUrl} alt="Banner Preview" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent p-3.5 flex flex-col justify-end">
             {badge && (
               <span className="self-start px-2.5 py-0.5 rounded-full bg-rose-600 text-white font-bold text-[9px] uppercase tracking-wider mb-1">
