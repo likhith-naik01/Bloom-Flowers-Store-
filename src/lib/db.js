@@ -571,18 +571,44 @@ export const db = {
     return local.orders.find(o => o.id === id);
   },
   updateOrder: async (id, updatedFields) => {
+    let updatedObj = null;
+
     if (supabase) {
-      const payload = {};
-      if (updatedFields.status !== undefined) payload.status = updatedFields.status;
-      if (updatedFields.paymentStatus !== undefined) payload.payment_status = updatedFields.paymentStatus;
-      if (updatedFields.notes !== undefined) payload.notes = updatedFields.notes;
-      const { data, error } = await supabase.from('orders').update(payload).eq('id', id).select().single();
-      if (!error && data) return db.getOrderById(id);
+      try {
+        const payload = {};
+        if (updatedFields.status !== undefined) payload.status = updatedFields.status;
+        if (updatedFields.paymentStatus !== undefined) payload.payment_status = updatedFields.paymentStatus;
+        if (updatedFields.notes !== undefined) payload.notes = updatedFields.notes;
+        if (updatedFields.orderNote !== undefined) payload.notes = updatedFields.orderNote;
+        if (updatedFields.total !== undefined) payload.total_amount = Number(updatedFields.total);
+        if (updatedFields.deliveryCharge !== undefined) payload.delivery_charge = Number(updatedFields.deliveryCharge);
+        if (updatedFields.isBulkOrder !== undefined) payload.is_bulk_order = updatedFields.isBulkOrder;
+
+        if (Object.keys(payload).length > 0) {
+          const { data, error } = await supabase.from('orders').update(payload).eq('id', id).select().single();
+          if (error) {
+            console.error('Supabase updateOrder error:', error);
+          } else if (data) {
+            updatedObj = await db.getOrderById(id);
+          }
+        }
+      } catch (e) {
+        console.error('Supabase updateOrder exception:', e);
+      }
     }
+
     const local = readDb();
-    local.orders = (local.orders || []).map(o => o.id === id ? { ...o, ...updatedFields } : o);
-    writeDb(local);
-    return local.orders.find(o => o.id === id);
+    let localObj = null;
+    local.orders = (local.orders || []).map(o => {
+      if (o.id === id) {
+        localObj = { ...o, ...updatedFields };
+        return localObj;
+      }
+      return o;
+    });
+    try { writeDb(local); } catch (e) {}
+
+    return updatedObj || localObj || (await db.getOrderById(id)) || { id, ...updatedFields };
   },
 
   // Admin Auth

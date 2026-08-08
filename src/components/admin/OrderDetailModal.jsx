@@ -28,8 +28,17 @@ export default function OrderDetailModal({ order, onClose, onUpdateStatus }) {
         body: JSON.stringify(payload)
       });
 
-      if (res.ok) {
-        const updatedOrder = await res.json();
+      let updatedOrder = null;
+      try {
+        const text = await res.text();
+        if (text) {
+          updatedOrder = JSON.parse(text);
+        }
+      } catch (jsonErr) {
+        console.error('JSON parse error:', jsonErr);
+      }
+
+      if (res.ok && updatedOrder) {
         if (onUpdateStatus) {
           onUpdateStatus(order.id, order.status);
         }
@@ -46,7 +55,7 @@ export default function OrderDetailModal({ order, onClose, onUpdateStatus }) {
           }
         }
       } else {
-        alert('Failed to save delivery charge. Please try again.');
+        alert((updatedOrder && updatedOrder.error) || 'Failed to save delivery charge. Please try again.');
       }
     } catch (e) {
       console.error(e);
