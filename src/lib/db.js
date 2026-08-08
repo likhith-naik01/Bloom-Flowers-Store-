@@ -209,7 +209,7 @@ export const db = {
   getProducts: async () => {
     if (supabase) {
       const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         const mapped = data.map((p, idx) => ({
           ...p,
           slNo: Number(p.sl_no || p.slNo || (idx + 1)),
@@ -229,43 +229,6 @@ export const db = {
         const memoryProds = (readDb().products || []).filter(mp => !mapped.some(sp => sp.id === mp.id));
         const combined = [...mapped, ...memoryProds];
         return combined.sort((a, b) => Number(b.slNo || 0) - Number(a.slNo || 0));
-      }
-
-      // Seed initial dummy products into Supabase if empty
-      if (!error && data && data.length === 0) {
-        try {
-          const insertPayload = INITIAL_PRODUCTS.map(p => ({
-            id: p.id,
-            name: p.nameEn,
-            price: Number(p.price),
-            unit: p.unit || 'bunch',
-            discount_type: p.discountType || 'none',
-            discount_value: Number(p.discountValue || 0),
-            image_url: p.imageUrl,
-            images: Array.isArray(p.images) ? p.images : [p.imageUrl],
-            category_ids: Array.isArray(p.categoryIds) ? p.categoryIds : [p.categoryId],
-            unit_variants: p.unitVariants || [],
-            in_stock: p.inStock !== false,
-            description: p.description || ''
-          }));
-          await supabase.from('products').insert(insertPayload);
-          const { data: fresh } = await supabase.from('products').select('*').order('created_at', { ascending: false });
-          if (fresh && fresh.length > 0) {
-            return fresh.map(p => ({
-              ...p,
-              nameEn: p.name || '',
-              imageUrl: p.image_url || '',
-              images: p.images || [p.image_url],
-              categoryIds: p.category_ids || [],
-              unitVariants: p.unit_variants || [],
-              discountType: p.discount_type || 'none',
-              discountValue: Number(p.discount_value || 0),
-              inStock: p.in_stock !== false
-            }));
-          }
-        } catch (e) {
-          console.error('Product seeding error:', e);
-        }
       }
     }
 
@@ -352,12 +315,12 @@ export const db = {
 
         const res1 = await supabase.from('products').insert([{ ...payload, sl_no: newProd.slNo }]).select().single();
         if (!res1.error && res1.data) {
-          return newProd;
+          return { ...newProd, ...res1.data };
         }
 
         const res2 = await supabase.from('products').insert([payload]).select().single();
         if (!res2.error && res2.data) {
-          return newProd;
+          return { ...newProd, ...res2.data };
         }
 
         // Minimal fallback with standard columns in case custom columns are missing
@@ -370,10 +333,22 @@ export const db = {
           description: newProd.description || ''
         }]).select().single();
         if (!res3.error && res3.data) {
-          return newProd;
+          return { ...newProd, ...res3.data };
         }
 
-        console.error('Supabase addProduct insert errors:', res1.error, res2.error, res3.error);
+        // Fallback without specifying id (in case Supabase expects auto-generated id)
+        const res4 = await supabase.from('products').insert([{
+          name: productName,
+          price: newProd.price,
+          unit: newProd.unit || 'piece',
+          image_url: newProd.imageUrl,
+          description: newProd.description || ''
+        }]).select().single();
+        if (!res4.error && res4.data) {
+          return { ...newProd, ...res4.data, id: res4.data.id || newProd.id };
+        }
+
+        console.error('Supabase addProduct insert errors:', res1.error, res2.error, res3.error, res4.error);
       } catch (err) {
         console.error('Supabase addProduct exception:', err);
       }
