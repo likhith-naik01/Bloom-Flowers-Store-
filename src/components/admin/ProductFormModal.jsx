@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Save, Upload, Trash2, Plus, CheckSquare, Square, Layers, Tag } from 'lucide-react';
 import { compressImage } from '../../lib/imageCompressor';
 
-export default function ProductFormModal({ product, autoSlNo, categories = [], onClose, onSave }) {
+export default function ProductFormModal({ product, existingProducts = [], autoSlNo, categories = [], onClose, onSave }) {
   const [nameEn, setNameEn] = useState('');
   const [nameHi, setNameHi] = useState('');
   const [nameKn, setNameKn] = useState('');
@@ -163,6 +163,11 @@ export default function ProductFormModal({ product, autoSlNo, categories = [], o
 
     if (!nameEn || !price || categoryIds.length === 0) {
       alert('Please fill in Product English Name, Base Price, and select at least 1 Category.');
+      return;
+    }
+
+    if (slNo && existingProducts.some((p) => p.id !== product?.id && Number(p.slNo) === Number(slNo))) {
+      alert(`⚠️ Serial Number SL-${slNo} is already assigned to another product. Each product must have a unique serial number.`);
       return;
     }
 

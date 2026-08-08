@@ -231,7 +231,23 @@ export const db = {
 
           const memoryProds = (readDb().products || []).filter(mp => !mapped.some(sp => sp.id === mp.id));
           const combined = [...mapped, ...memoryProds];
-          return combined.sort((a, b) => Number(b.slNo || 0) - Number(a.slNo || 0));
+          const sorted = combined.sort((a, b) => Number(a.slNo || 0) - Number(b.slNo || 0));
+          
+          const seen = new Set();
+          let maxSl = 0;
+          sorted.forEach(p => { if (Number(p.slNo) > maxSl) maxSl = Number(p.slNo); });
+
+          const uniqueList = sorted.map((p, idx) => {
+            let sl = Number(p.slNo || 0);
+            if (sl <= 0 || seen.has(sl)) {
+              maxSl += 1;
+              sl = maxSl;
+            }
+            seen.add(sl);
+            return { ...p, slNo: sl };
+          });
+
+          return uniqueList.sort((a, b) => Number(b.slNo || 0) - Number(a.slNo || 0));
         }
       } catch (e) {
         console.error('Supabase getProducts error:', e);

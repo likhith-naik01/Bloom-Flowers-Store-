@@ -702,6 +702,7 @@ export default function AdminDashboard() {
           {showProductForm && (
             <ProductFormModal
               product={editingProduct}
+              existingProducts={products}
               autoSlNo={products.reduce((max, p) => Math.max(max, Number(p.slNo || 0)), 0) + 1}
               categories={categories}
               onClose={() => {
