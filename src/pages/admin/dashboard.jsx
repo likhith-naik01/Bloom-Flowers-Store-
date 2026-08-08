@@ -183,6 +183,25 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleEditCategory = async (id, catData) => {
+    try {
+      const res = await fetch(`/api/categories/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(catData)
+      });
+      if (res.ok) {
+        await refreshData();
+        triggerToast('✅ Category updated successfully!');
+      } else {
+        alert('Failed to update category. Please try again.');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Error updating category: ' + e.message);
+    }
+  };
+
   const handleDeleteCategory = async (id) => {
     if (!confirm('Delete this category?')) return;
     try {
@@ -687,6 +706,7 @@ export default function AdminDashboard() {
             <CategoryManager
               categories={categories}
               onAddCategory={handleAddCategory}
+              onEditCategory={handleEditCategory}
               onDeleteCategory={handleDeleteCategory}
             />
           )}

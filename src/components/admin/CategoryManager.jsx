@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { Plus, Trash2, Layers, Upload, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, Edit2, Layers, Upload, CheckCircle2, X } from 'lucide-react';
 import { compressImage } from '../../lib/imageCompressor';
 
-export default function CategoryManager({ categories = [], onAddCategory, onDeleteCategory }) {
+export default function CategoryManager({ categories = [], onAddCategory, onEditCategory, onDeleteCategory }) {
   const [showAdd, setShowAdd] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null);
   const [nameEn, setNameEn] = useState('');
   const [nameHi, setNameHi] = useState('');
   const [nameKn, setNameKn] = useState('');
@@ -12,6 +13,27 @@ export default function CategoryManager({ categories = [], onAddCategory, onDele
   const [description, setDescription] = useState('');
   const [uploading, setUploading] = useState(false);
   const [savedMsg, setSavedMsg] = useState(false);
+  const [toastText, setToastText] = useState('');
+
+  const handleStartEdit = (cat) => {
+    setEditingCategory(cat);
+    setNameEn(cat.nameEn || cat.name || '');
+    setNameHi(cat.nameHi || '');
+    setNameKn(cat.nameKn || '');
+    setImageUrl(cat.image || cat.imageUrl || '');
+    setDescription(cat.description || '');
+    setShowAdd(true);
+  };
+
+  const handleCancel = () => {
+    setEditingCategory(null);
+    setNameEn('');
+    setNameHi('');
+    setNameKn('');
+    setImageUrl('');
+    setDescription('');
+    setShowAdd(false);
+  };
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
@@ -41,26 +63,34 @@ export default function CategoryManager({ categories = [], onAddCategory, onDele
     }
   };
 
-  const handleAdd = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!nameEn || !imageUrl) {
       alert('Please enter English Category Name and upload/provide an image.');
       return;
     }
-    await onAddCategory({
+
+    const payload = {
       nameEn,
+      name: nameEn,
       nameHi,
       nameKn,
       image: imageUrl,
       imageUrl: imageUrl,
       description
-    });
-    setNameEn('');
-    setNameHi('');
-    setNameKn('');
-    setImageUrl('');
-    setDescription('');
-    setShowAdd(false);
+    };
+
+    if (editingCategory) {
+      if (onEditCategory) {
+        await onEditCategory(editingCategory.id, payload);
+      }
+      setToastText('Category Updated Successfully!');
+    } else {
+      await onAddCategory(payload);
+      setToastText('Category Created Successfully! It is now live for customers.');
+    }
+
+    handleCancel();
     setSavedMsg(true);
     setTimeout(() => setSavedMsg(false), 4000);
   };
@@ -70,7 +100,7 @@ export default function CategoryManager({ categories = [], onAddCategory, onDele
       {savedMsg && (
         <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold text-xs flex items-center gap-2 animate-fade-in">
           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-          Category Saved Successfully! It is now live for customers.
+          {toastText}
         </div>
       )}
 
@@ -79,16 +109,38 @@ export default function CategoryManager({ categories = [], onAddCategory, onDele
           <Layers className="w-4 h-4 text-rose-400" /> Categories & Occasions ({categories.length})
         </h2>
         <button
-          onClick={() => setShowAdd(!showAdd)}
+          onClick={() => {
+            if (showAdd) {
+              handleCancel();
+            } else {
+              setEditingCategory(null);
+              setNameEn('');
+              setNameHi('');
+              setNameKn('');
+              setImageUrl('');
+              setDescription('');
+              setShowAdd(true);
+            }
+          }}
           className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1 transition-all shadow-md"
         >
-          <Plus className="w-3.5 h-3.5" /> Add Category
+          {showAdd ? <X className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+          {showAdd ? 'Close Form' : 'Add Category'}
         </button>
       </div>
 
       {showAdd && (
-        <form onSubmit={handleAdd} className="bg-slate-900/90 p-4 rounded-2xl border border-white/10 space-y-3 shadow-xl">
-          <h3 className="text-xs font-bold text-slate-200">New Category Details</h3>
+        <form onSubmit={handleSubmit} className="bg-slate-900/90 p-4 rounded-2xl border border-white/10 space-y-3 shadow-xl">
+          <div className="flex items-center justify-between border-b border-white/10 pb-2">
+            <h3 className="text-xs font-bold text-slate-200">
+              {editingCategory ? `✏️ Edit Category: ${editingCategory.nameEn || editingCategory.name}` : '✨ New Category Details'}
+            </h3>
+            {editingCategory && (
+              <button type="button" onClick={handleCancel} className="text-[11px] text-slate-400 hover:text-white flex items-center gap-1">
+                <X className="w-3 h-3" /> Cancel Edit
+              </button>
+            )}
+          </div>
           
           <div>
             <label className="text-[11px] font-bold text-slate-300 mb-1 block">English Name * (e.g. Bouquets Section)</label>
@@ -161,12 +213,23 @@ export default function CategoryManager({ categories = [], onAddCategory, onDele
             className="w-full p-2 rounded-xl glass-panel text-xs text-white border border-white/10 focus:outline-none"
           />
 
-          <button
-            type="submit"
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg transition-all"
-          >
-            Save Category & Publish to Customers
-          </button>
+          <div className="flex items-center gap-2 pt-1">
+            <button
+              type="submit"
+              className="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg transition-all"
+            >
+              {editingCategory ? 'Update Category Details' : 'Save Category & Publish to Customers'}
+            </button>
+            {editingCategory && (
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs border border-white/10"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
         </form>
       )}
 
@@ -174,7 +237,7 @@ export default function CategoryManager({ categories = [], onAddCategory, onDele
         {categories.map((c) => {
           const catImg = c.image || c.imageUrl || '';
           return (
-            <div key={c.id} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/60 border border-white/5">
+            <div key={c.id} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/60 border border-white/5 hover:border-white/20 transition-all">
               <div className="flex items-center gap-3">
                 <div className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-white/10 bg-slate-800">
                   {catImg ? (
@@ -192,12 +255,23 @@ export default function CategoryManager({ categories = [], onAddCategory, onDele
                   )}
                 </div>
               </div>
-              <button
-                onClick={() => onDeleteCategory(c.id)}
-                className="p-1.5 text-slate-400 hover:text-red-400 transition-colors"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => handleStartEdit(c)}
+                  className="p-1.5 text-slate-400 hover:text-white transition-colors"
+                  title="Edit Category"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => onDeleteCategory(c.id)}
+                  className="p-1.5 text-slate-400 hover:text-red-400 transition-colors"
+                  title="Delete Category"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           );
         })}
