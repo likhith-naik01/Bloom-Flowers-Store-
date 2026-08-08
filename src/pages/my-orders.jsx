@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Header from '../components/layout/Header';
 import BottomNav from '../components/layout/BottomNav';
 import { useShop } from '../context/ShopContext';
+import { getOrderItemDetails } from '../lib/orderHelper';
 import { Phone, Search, Package, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function MyOrders() {
@@ -135,21 +136,20 @@ export default function MyOrders() {
                   <div className="bg-slate-900/60 p-2.5 rounded-xl border border-white/5 my-2.5 space-y-2">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Ordered Items</span>
                     {ord.items.map((it, idx) => {
-                      const matchingProd = products.find((p) => p.id === it.id || p.nameEn === it.nameEn);
-                      const itemImg = it.imageUrl || it.image || (Array.isArray(it.images) && it.images[0]) || matchingProd?.imageUrl || (matchingProd?.images && matchingProd.images[0]) || '';
+                      const { img: itemImg, unit: unitDisplay } = getOrderItemDetails(it, products);
 
                       return (
                         <div key={idx} className="flex items-center gap-2.5 text-xs text-white">
                           <div className="relative w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 bg-slate-800 border border-white/10">
                             {itemImg ? (
-                              <img src={itemImg} alt={it.nameEn} className="w-full h-full object-cover" />
+                              <img src={itemImg} alt={it.nameEn || 'Flower'} className="w-full h-full object-cover" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-slate-500 text-xs">🌸</div>
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <span className="font-bold block truncate text-slate-200">{it.nameEn}</span>
-                            <span className="text-[10px] text-slate-400">Qty: {it.quantity} ({it.selectedUnit || it.unit})</span>
+                            <span className="font-bold block truncate text-slate-200">{it.nameEn || it.name}</span>
+                            <span className="text-[10px] text-slate-400">Qty: {it.quantity} ({unitDisplay})</span>
                           </div>
                           <span className="font-extrabold text-white text-xs">₹{it.price * it.quantity}</span>
                         </div>

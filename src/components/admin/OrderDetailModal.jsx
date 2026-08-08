@@ -1,4 +1,9 @@
+import React, { useState } from 'react';
+import { X, MessageCircle, Phone, MapPin, Calendar, Clock, ShoppingBag, Truck, Gift, Save, CheckSquare, Square } from 'lucide-react';
+import OrderStatusBadge from './OrderStatusBadge';
+import { generateAdminWhatsAppLink } from '../../lib/whatsapp';
 import { useShop } from '../../context/ShopContext';
+import { getOrderItemDetails } from '../../lib/orderHelper';
 
 export default function OrderDetailModal({ order, onClose, onUpdateStatus }) {
   if (!order) return null;
@@ -121,23 +126,22 @@ export default function OrderDetailModal({ order, onClose, onUpdateStatus }) {
           </h3>
           <div className="space-y-2">
             {order.items.map((it, idx) => {
-              const matchingProd = products.find((p) => p.id === it.id || p.nameEn === it.nameEn);
-              const itemImg = it.imageUrl || it.image || (Array.isArray(it.images) && it.images[0]) || matchingProd?.imageUrl || (matchingProd?.images && matchingProd.images[0]) || '';
+              const { img: itemImg, unit: unitDisplay } = getOrderItemDetails(it, products);
 
               return (
                 <div key={idx} className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-900/40 border border-white/5 text-xs text-white">
-                  <div className="relative w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 bg-slate-800 border border-white/10">
+                  <div className="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-slate-800 border border-white/10 shadow-sm">
                     {itemImg ? (
-                      <img src={itemImg} alt={it.nameEn} className="w-full h-full object-cover" />
+                      <img src={itemImg} alt={it.nameEn || 'Flower'} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-slate-500 text-base">🌸</div>
                     )}
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <span className="font-bold block text-white truncate">{it.nameEn}</span>
-                    <span className="text-rose-300 block text-[10px]">
-                      ₹{it.price} / {it.selectedUnit || it.unit}
+                    <span className="font-bold block text-white truncate text-xs">{it.nameEn || it.name}</span>
+                    <span className="text-rose-300 block text-[11px] font-semibold">
+                      ₹{it.price} / {unitDisplay}
                     </span>
                   </div>
 
