@@ -164,6 +164,11 @@ export default function ProductFormModal({ product, categories = [], onClose, on
 
     setSaving(true);
     try {
+      const finalUnit = unit || 'piece';
+      const finalVariants = Array.isArray(unitVariants) && unitVariants.length > 0
+        ? unitVariants
+        : [{ unit: finalUnit, price: Number(price) }];
+
       await onSave({
         ...product,
         nameEn,
@@ -171,7 +176,7 @@ export default function ProductFormModal({ product, categories = [], onClose, on
         nameKn,
         categoryIds,
         price: Number(price),
-        unit,
+        unit: finalUnit,
         slNo: slNo ? Number(slNo) : undefined,
         discountType,
         discountValue: Number(discountValue || 0),
@@ -179,7 +184,7 @@ export default function ProductFormModal({ product, categories = [], onClose, on
         description,
         images: finalImages,
         imageUrl: finalImages[0] || '',
-        unitVariants
+        unitVariants: finalVariants
       });
     } finally {
       setSaving(false);

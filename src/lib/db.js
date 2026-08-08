@@ -280,6 +280,7 @@ export const db = {
           ...data,
           slNo: Number(data.sl_no || data.slNo || 1),
           nameEn: data.name || data.nameEn || '',
+          unit: data.unit || (Array.isArray(data.unit_variants) && data.unit_variants[0]?.unit) || 'piece',
           imageUrl: data.image_url || (Array.isArray(data.images) && data.images[0] ? data.images[0] : ''),
           images: Array.isArray(data.images) && data.images.length > 0 ? data.images : (data.image_url ? [data.image_url] : []),
           categoryIds: data.category_ids || [],
@@ -302,19 +303,22 @@ export const db = {
     const maxSl = existingProds.reduce((max, item) => Math.max(max, Number(item.slNo || 0)), 0);
     const assignedSlNo = prod.slNo ? Number(prod.slNo) : (maxSl + 1);
 
+    const prodUnit = prod.unit || (Array.isArray(prod.unitVariants) && prod.unitVariants[0]?.unit) || 'piece';
+
     const newProd = {
       ...prod,
       id: prod.id || `prod_${Date.now()}`,
       slNo: assignedSlNo,
       name: productName,
       nameEn: productName,
+      unit: prodUnit,
       categoryIds: categoryIdsList,
       images: imagesList,
       imageUrl: imagesList[0] || '',
       price: Number(prod.price),
       discountType: prod.discountType || 'none',
       discountValue: Number(prod.discountValue || 0),
-      unitVariants: Array.isArray(prod.unitVariants) ? prod.unitVariants : [],
+      unitVariants: Array.isArray(prod.unitVariants) && prod.unitVariants.length > 0 ? prod.unitVariants : [{ unit: prodUnit, price: Number(prod.price) }],
       inStock: prod.inStock !== false
     };
 
