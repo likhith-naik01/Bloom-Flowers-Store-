@@ -379,9 +379,9 @@ export const db = {
           ...updated,
           name: productName || p.name,
           nameEn: productName || p.nameEn || p.name,
-          categoryIds: cats,
-          images: imgs,
-          imageUrl: imgs[0] || p.imageUrl || '',
+          categoryIds: categoryIdsList.length > 0 ? categoryIdsList : p.categoryIds || [],
+          images: imagesList.length > 0 ? imagesList : p.images || [],
+          imageUrl: imagesList[0] || p.imageUrl || '',
           price: Number(updated.price !== undefined ? updated.price : p.price),
           discountValue: Number(updated.discountValue !== undefined ? updated.discountValue : p.discountValue),
           unitVariants: Array.isArray(updated.unitVariants) ? updated.unitVariants : p.unitVariants || []

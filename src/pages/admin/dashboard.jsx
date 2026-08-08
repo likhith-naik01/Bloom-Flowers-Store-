@@ -47,6 +47,8 @@ export default function AdminDashboard() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [showProductForm, setShowProductForm] = useState(false);
   const [saveToast, setSaveToast] = useState('');
+  const [prodSectionFilter, setProdSectionFilter] = useState('all');
+  const [prodCatFilter, setProdCatFilter] = useState('all');
 
   useEffect(() => {
     if (!authLoading && !isAdmin) {
@@ -329,7 +331,7 @@ export default function AdminDashboard() {
                   : 'bg-slate-800/80 text-slate-300 border border-white/5'
               }`}
             >
-              <Package className="w-3.5 h-3.5" /> 3. Special Discounts & Products
+              <Package className="w-3.5 h-3.5" /> 3. Products Catalog
             </button>
           </div>
 
@@ -423,84 +425,189 @@ export default function AdminDashboard() {
           )}
 
           {/* TAB 3: Products & Stock Control */}
-          {activeTab === 'products' && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between mb-2">
-                <h2 className="text-sm font-bold text-slate-300">Manage Catalog & Stock Status</h2>
-                <button
-                  onClick={() => {
-                    setEditingProduct(null);
-                    setShowProductForm(true);
-                  }}
-                  className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1 shadow-md shadow-rose-600/30"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Add Product
-                </button>
-              </div>
+          {activeTab === 'products' && (() => {
+            const displayedProducts = products.filter((p) => {
+              const pCatIds = Array.isArray(p.categoryIds) ? p.categoryIds : (p.categoryId ? [p.categoryId] : []);
+              const isDiscounted = (Number(p.discountValue) > 0 || (p.discountType && p.discountType !== 'none'));
+              
+              const matchesSection =
+                prodSectionFilter === 'all'
+                  ? true
+                  : prodSectionFilter === 'regular'
+                  ? !isDiscounted
+                  : isDiscounted;
+                  
+              const matchesCat = prodCatFilter === 'all' || pCatIds.includes(prodCatFilter);
+              return matchesSection && matchesCat;
+            });
 
-              <div className="space-y-2.5">
-                {products.map((p) => {
-                  const prodImg = p.imageUrl || (Array.isArray(p.images) && p.images[0]) || p.image || '';
-                  return (
-                    <div
-                      key={p.id}
-                      className="glass-panel p-3 rounded-2xl border border-white/10 flex items-center gap-3"
-                    >
-                      <div className="relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-slate-800 border border-white/10">
-                        {prodImg ? (
-                          <img src={prodImg} alt={p.nameEn || p.name} className={`w-full h-full object-cover ${!p.inStock ? 'grayscale opacity-60' : ''}`} />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-slate-500 text-lg">🌸</div>
-                        )}
-                      </div>
+            const regularCount = products.filter(p => p.discountType === 'none' || !Number(p.discountValue)).length;
+            const specialCount = products.filter(p => p.discountType !== 'none' && Number(p.discountValue) > 0).length;
 
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-sm text-white truncate">{p.nameEn}</h3>
-                      <p className="text-[11px] text-rose-300 font-semibold">
-                        ₹{p.price} / {p.unit}
-                        {p.discountType !== 'none' && p.discountValue > 0 && (
-                          <span className="text-amber-400 font-bold ml-1">
-                            ({p.discountType === 'percent' ? `${p.discountValue}% OFF` : `₹${p.discountValue} OFF`})
-                          </span>
-                        )}
-                      </p>
-
-                      {/* Stock Toggle Button */}
-                      <button
-                        onClick={() => handleStockToggle(p)}
-                        className={`mt-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border transition-colors ${
-                          p.inStock
-                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                            : 'bg-red-950/80 text-red-300 border-red-500/40'
-                        }`}
-                      >
-                        {p.inStock ? '✅ In Stock (Click to Mark Sold Out)' : '⚠️ Sold Out (Click to Mark Available)'}
-                      </button>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => {
-                          setEditingProduct(p);
-                          setShowProductForm(true);
-                        }}
-                        className="p-1.5 text-slate-400 hover:text-white transition-colors"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteProduct(p.id)}
-                        className="p-1.5 text-slate-400 hover:text-red-400 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+            return (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between mb-1">
+                  <div>
+                    <h2 className="text-sm font-bold text-slate-200">Manage Catalog & Products</h2>
+                    <p className="text-[11px] text-slate-400">Filter by section or category to manage regular vs special items</p>
                   </div>
-                );
-              })}
+                  <button
+                    onClick={() => {
+                      setEditingProduct(null);
+                      setShowProductForm(true);
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1 shadow-md shadow-rose-600/30"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Add Product
+                  </button>
+                </div>
+
+                {/* Section & Category Filters */}
+                <div className="space-y-2 glass-panel p-2.5 rounded-2xl border border-white/10">
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                    <button
+                      onClick={() => setProdSectionFilter('all')}
+                      className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                        prodSectionFilter === 'all'
+                          ? 'bg-rose-600 text-white shadow-md'
+                          : 'bg-slate-800/80 text-slate-400 border border-white/5 hover:bg-slate-700'
+                      }`}
+                    >
+                      All Products ({products.length})
+                    </button>
+                    <button
+                      onClick={() => setProdSectionFilter('regular')}
+                      className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                        prodSectionFilter === 'regular'
+                          ? 'bg-rose-600 text-white shadow-md'
+                          : 'bg-slate-800/80 text-slate-400 border border-white/5 hover:bg-slate-700'
+                      }`}
+                    >
+                      📦 Regular Catalog ({regularCount})
+                    </button>
+                    <button
+                      onClick={() => setProdSectionFilter('special')}
+                      className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                        prodSectionFilter === 'special'
+                          ? 'bg-amber-600 text-white shadow-md'
+                          : 'bg-slate-800/80 text-slate-400 border border-white/5 hover:bg-slate-700'
+                      }`}
+                    >
+                      🏷️ Special Discounts ({specialCount})
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2 bg-slate-900/60 p-2 rounded-xl border border-white/10 text-xs">
+                    <span className="font-bold text-slate-400 text-[11px] whitespace-nowrap">Filter by Category:</span>
+                    <select
+                      value={prodCatFilter}
+                      onChange={(e) => setProdCatFilter(e.target.value)}
+                      className="flex-1 bg-slate-800 text-white rounded-lg p-1.5 border border-white/10 text-xs focus:outline-none"
+                    >
+                      <option value="all">All Categories ({categories.length})</option>
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.nameEn}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Product Cards List */}
+                {displayedProducts.length === 0 ? (
+                  <div className="text-center py-10 glass-panel rounded-2xl border border-white/10">
+                    <p className="text-sm text-slate-400">No products found matching selected filters.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {displayedProducts.map((p) => {
+                      const prodImg = p.imageUrl || (Array.isArray(p.images) && p.images[0]) || p.image || '';
+                      const pCatIds = Array.isArray(p.categoryIds) ? p.categoryIds : (p.categoryId ? [p.categoryId] : []);
+                      const assignedCats = categories.filter((c) => pCatIds.includes(c.id));
+                      const isSpecial = p.discountType !== 'none' && Number(p.discountValue) > 0;
+
+                      return (
+                        <div
+                          key={p.id}
+                          className="glass-panel p-3 rounded-2xl border border-white/10 flex items-center gap-3"
+                        >
+                          <div className="relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-slate-800 border border-white/10">
+                            {prodImg ? (
+                              <img src={prodImg} alt={p.nameEn || p.name} className={`w-full h-full object-cover ${!p.inStock ? 'grayscale opacity-60' : ''}`} />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-500 text-lg">🌸</div>
+                            )}
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                              <h3 className="font-bold text-sm text-white truncate">{p.nameEn}</h3>
+                              <span className={`px-1.5 py-0.2 rounded-md text-[9px] font-extrabold ${
+                                isSpecial ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-slate-700/60 text-slate-300'
+                              }`}>
+                                {isSpecial ? '🏷️ Special Offer' : '📦 Regular'}
+                              </span>
+                            </div>
+
+                            <p className="text-[11px] text-rose-300 font-semibold">
+                              ₹{p.price} / {p.unit}
+                              {isSpecial && (
+                                <span className="text-amber-400 font-bold ml-1">
+                                  ({p.discountType === 'percent' ? `${p.discountValue}% OFF` : `₹${p.discountValue} OFF`})
+                                </span>
+                              )}
+                            </p>
+
+                            {/* Category Badges */}
+                            {assignedCats.length > 0 && (
+                              <div className="flex items-center gap-1 flex-wrap mt-1">
+                                {assignedCats.map((c) => (
+                                  <span key={c.id} className="px-1.5 py-0.5 rounded-full bg-slate-800 text-[9px] font-bold text-rose-300 border border-rose-500/20">
+                                    {c.nameEn}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Stock Toggle Button */}
+                            <button
+                              onClick={() => handleStockToggle(p)}
+                              className={`mt-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border transition-colors ${
+                                p.inStock
+                                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                  : 'bg-red-950/80 text-red-300 border-red-500/40'
+                              }`}
+                            >
+                              {p.inStock ? '✅ In Stock' : '⚠️ Sold Out'}
+                            </button>
+                          </div>
+
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => {
+                                setEditingProduct(p);
+                                setShowProductForm(true);
+                              }}
+                              className="p-1.5 text-slate-400 hover:text-white transition-colors"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteProduct(p.id)}
+                              className="p-1.5 text-slate-400 hover:text-red-400 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* TAB 4: Wallpaper Manager */}
           {activeTab === 'banner' && (

@@ -32,7 +32,7 @@ export default function ProductFormModal({ product, categories = [], onClose, on
       
       const cats = Array.isArray(product.categoryIds) && product.categoryIds.length > 0
         ? product.categoryIds
-        : (product.categoryId ? [product.categoryId] : [categories[0]?.id]);
+        : (product.categoryId ? [product.categoryId] : (categories[0]?.id ? [categories[0].id] : []));
       setCategoryIds(cats.filter(Boolean));
 
       setPrice(product.price || '');
@@ -49,11 +49,23 @@ export default function ProductFormModal({ product, categories = [], onClose, on
 
       setUnitVariants(Array.isArray(product.unitVariants) ? product.unitVariants : []);
     } else {
-      if (categories.length > 0) {
-        setCategoryIds([categories[0].id]);
-      }
+      setNameEn('');
+      setNameHi('');
+      setNameKn('');
+      setCategoryIds((prev) => {
+        if (prev && prev.length > 0) return prev;
+        return categories[0]?.id ? [categories[0].id] : [];
+      });
+      setPrice('');
+      setUnit('bunch');
+      setDiscountType('none');
+      setDiscountValue(0);
+      setInStock(true);
+      setDescription('');
+      setImages([]);
+      setUnitVariants([]);
     }
-  }, [product, categories]);
+  }, [product]);
 
   // Toggle Category Checkbox
   const toggleCategory = (catId) => {
@@ -184,6 +196,49 @@ export default function ProductFormModal({ product, categories = [], onClose, on
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Section & Product Type Selection */}
+          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 border border-white/10 space-y-2">
+            <label className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+              <Tag className="w-4 h-4 text-amber-400" /> Product Listing Section / Offer Type *
+            </label>
+            <p className="text-[11px] text-slate-400">
+              Choose whether this is a regular catalog product or a special offer item.
+            </p>
+            
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setDiscountType('none');
+                  setDiscountValue(0);
+                }}
+                className={`p-2.5 rounded-xl text-xs font-bold transition-all border text-left flex flex-col gap-0.5 ${
+                  discountType === 'none'
+                    ? 'bg-rose-600/30 text-white border-rose-500/60 shadow-md shadow-rose-600/20'
+                    : 'bg-slate-800/60 text-slate-400 border-white/5 hover:bg-slate-700'
+                }`}
+              >
+                <span className="flex items-center gap-1 text-white">📦 Regular Product</span>
+                <span className="text-[10px] text-slate-400 font-normal">Standard catalog item</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (discountType === 'none') setDiscountType('percent');
+                }}
+                className={`p-2.5 rounded-xl text-xs font-bold transition-all border text-left flex flex-col gap-0.5 ${
+                  discountType !== 'none'
+                    ? 'bg-amber-600/30 text-white border-amber-500/60 shadow-md shadow-amber-600/20'
+                    : 'bg-slate-800/60 text-slate-400 border-white/5 hover:bg-slate-700'
+                }`}
+              >
+                <span className="flex items-center gap-1 text-amber-300">🏷️ Special Discount</span>
+                <span className="text-[10px] text-slate-400 font-normal">Featured in Special Offers</span>
+              </button>
+            </div>
+          </div>
+
           {/* Names */}
           <div>
             <label className="text-xs font-semibold text-slate-300 mb-1 block">
@@ -234,7 +289,7 @@ export default function ProductFormModal({ product, categories = [], onClose, on
             <p className="text-[11px] text-slate-400 mb-2.5">
               Check all categories where this flower should appear (e.g. Anniversary + Pooja + Garlands).
             </p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2 mb-2.5">
               {categories.map((c) => {
                 const isSelected = categoryIds.includes(c.id);
                 return (
@@ -258,6 +313,23 @@ export default function ProductFormModal({ product, categories = [], onClose, on
                 );
               })}
             </div>
+
+            {/* Live Visibility Summary */}
+            {categoryIds.length > 0 && (
+              <div className="pt-2 border-t border-white/10 text-[11px] text-slate-300 flex items-center gap-1.5 flex-wrap">
+                <span className="font-bold text-slate-400">Appears in:</span>
+                <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-200 text-[10px] font-bold border border-white/10">
+                  {discountType === 'none' ? '📦 Regular Catalog' : '🏷️ Special Discounts'}
+                </span>
+                {categories
+                  .filter((c) => categoryIds.includes(c.id))
+                  .map((c) => (
+                    <span key={c.id} className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] font-bold">
+                      {c.nameEn}
+                    </span>
+                  ))}
+              </div>
+            )}
           </div>
 
           {/* Real Photo Uploads (Multiple Photos) */}
