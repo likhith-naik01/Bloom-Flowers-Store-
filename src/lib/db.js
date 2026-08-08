@@ -324,9 +324,8 @@ export const db = {
 
     if (supabase) {
       try {
-        const { data, error } = await supabase.from('products').insert([{
+        const payload = {
           id: newProd.id,
-          sl_no: newProd.slNo,
           name: productName,
           price: newProd.price,
           unit: newProd.unit || 'piece',
@@ -338,8 +337,14 @@ export const db = {
           unit_variants: newProd.unitVariants,
           in_stock: newProd.inStock,
           description: newProd.description || ''
-        }]).select().single();
-        if (error) console.error('Supabase addProduct error:', error);
+        };
+
+        try {
+          const { data, error } = await supabase.from('products').insert([{ ...payload, sl_no: newProd.slNo }]).select().single();
+          if (!error && data) return newProd;
+        } catch (e1) {}
+
+        const { data, error } = await supabase.from('products').insert([payload]).select().single();
         if (!error && data) return newProd;
       } catch (err) {
         console.error('Supabase addProduct exception:', err);

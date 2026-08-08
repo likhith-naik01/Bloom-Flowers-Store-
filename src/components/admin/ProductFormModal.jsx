@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Save, Upload, Trash2, Plus, CheckSquare, Square, Layers, Tag } from 'lucide-react';
 import { compressImage } from '../../lib/imageCompressor';
 
-export default function ProductFormModal({ product, categories = [], onClose, onSave }) {
+export default function ProductFormModal({ product, autoSlNo, categories = [], onClose, onSave }) {
   const [nameEn, setNameEn] = useState('');
   const [nameHi, setNameHi] = useState('');
   const [nameKn, setNameKn] = useState('');
@@ -61,6 +61,7 @@ export default function ProductFormModal({ product, categories = [], onClose, on
       });
       setPrice('');
       setUnit('piece');
+      setSlNo(autoSlNo || '');
       setDiscountType('none');
       setDiscountValue(0);
       setInStock(true);
@@ -68,7 +69,7 @@ export default function ProductFormModal({ product, categories = [], onClose, on
       setImages([]);
       setUnitVariants([]);
     }
-  }, [product]);
+  }, [product, autoSlNo]);
 
   // Toggle Category Checkbox
   const toggleCategory = (catId) => {
@@ -156,9 +157,12 @@ export default function ProductFormModal({ product, categories = [], onClose, on
     if (urlInput && urlInput.trim() && !finalImages.includes(urlInput.trim())) {
       finalImages.push(urlInput.trim());
     }
+    if (finalImages.length === 0) {
+      finalImages = ['https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80'];
+    }
 
-    if (!nameEn || !price || categoryIds.length === 0 || finalImages.length === 0) {
-      alert('Please fill in English Name, Base Price, select at least 1 Category, and upload at least 1 photo.');
+    if (!nameEn || !price || categoryIds.length === 0) {
+      alert('Please fill in Product English Name, Base Price, and select at least 1 Category.');
       return;
     }
 
