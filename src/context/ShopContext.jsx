@@ -59,18 +59,31 @@ export function ShopProvider({ children }) {
 
   const fetchShopData = async () => {
     try {
-      const [catRes, prodRes, banRes, ordRes] = await Promise.all([
+      const isAdminSession =
+        typeof window !== 'undefined' && localStorage.getItem('flower_shop_admin') === 'true';
+
+      const fetchPromises = [
         fetch('/api/categories'),
         fetch('/api/products'),
-        fetch('/api/banner'),
-        fetch('/api/orders')
-      ]);
+        fetch('/api/banner')
+      ];
 
-      if (catRes.ok) setCategories(await catRes.json());
-      if (prodRes.ok) setProducts(await prodRes.json());
-      if (banRes.ok) setBanners(await banRes.json());
+      // Fetch orders for admin or initial setup
+      if (isAdminSession || !initialFetchDone.current) {
+        fetchPromises.push(fetch('/api/orders'));
+      }
+
+      const results = await Promise.all(fetchPromises);
+      const catRes = results[0];
+      const prodRes = results[1];
+      const banRes = results[2];
+      const ordRes = results[3];
+
+      if (catRes && catRes.ok) setCategories(await catRes.json());
+      if (prodRes && prodRes.ok) setProducts(await prodRes.json());
+      if (banRes && banRes.ok) setBanners(await banRes.json());
       
-      if (ordRes.ok) {
+      if (ordRes && ordRes.ok) {
         const fetchedOrders = await ordRes.json();
         setOrders(fetchedOrders);
 
@@ -78,8 +91,8 @@ export function ShopProvider({ children }) {
           // On first load, record all existing order IDs as already notified so they don't chime
           fetchedOrders.forEach((o) => notifiedOrderIdsRef.current.add(o.id));
           initialFetchDone.current = true;
-        } else {
-          // Find newly arrived orders that have NEVER been chimed for
+        } else if (isAdminSession) {
+          // Find newly arrived orders that have NEVER been chimed for (ADMIN ONLY)
           const unnotifiedNewOrders = fetchedOrders.filter(
             (o) => o.status === 'new' && !notifiedOrderIdsRef.current.has(o.id)
           );
@@ -88,7 +101,7 @@ export function ShopProvider({ children }) {
             unnotifiedNewOrders.forEach((newOrd) => {
               notifiedOrderIdsRef.current.add(newOrd.id); // Mark immediately as notified
               setNewOrderAlert(newOrd);
-              playOrderChime(); // Single 1-time chime sound!
+              playOrderChime(); // Single 1-time chime sound ONLY for logged-in Admin!
               triggerBrowserNotification(newOrd);
             });
           }
