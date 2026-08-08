@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Upload, Trash2, Plus, CheckSquare, Square, Layers, Tag } from 'lucide-react';
+import { compressImage } from '../../lib/imageCompressor';
 
 export default function ProductFormModal({ product, categories = [], onClose, onSave }) {
   const [nameEn, setNameEn] = useState('');
@@ -78,36 +79,25 @@ export default function ProductFormModal({ product, categories = [], onClose, on
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        setUploadStatusText(`Uploading photo ${i + 1} of ${files.length}...`);
+        setUploadStatusText(`Compressing & Uploading photo ${i + 1} of ${files.length}...`);
 
-        const uploadedUrl = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = async () => {
-            const base64Data = reader.result;
-            try {
-              const res = await fetch('/api/upload', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image: base64Data })
-              });
-              const data = await res.json();
-              if (res.ok && data.url) {
-                resolve(data.url);
-              } else {
-                // Fallback to base64 data if upload endpoint failed
-                resolve(base64Data);
-              }
-            } catch (err) {
-              console.error('File upload fetch error:', err);
-              // Fallback to base64 data URL
-              resolve(base64Data);
-            }
-          };
-          reader.readAsDataURL(file);
-        });
+        try {
+          const compressedData = await compressImage(file, 800, 800, 0.82);
+          if (!compressedData) continue;
 
-        if (uploadedUrl) {
-          newUploadedUrls.push(uploadedUrl);
+          const res = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: compressedData })
+          });
+          const data = await res.json();
+          if (res.ok && data.url) {
+            newUploadedUrls.push(data.url);
+          } else {
+            newUploadedUrls.push(compressedData);
+          }
+        } catch (err) {
+          console.error('File upload fetch error:', err);
         }
       }
 
@@ -147,7 +137,12 @@ export default function ProductFormModal({ product, categories = [], onClose, on
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!nameEn || !price || categoryIds.length === 0 || images.length === 0) {
+    let finalImages = [...images];
+    if (urlInput && urlInput.trim() && !finalImages.includes(urlInput.trim())) {
+      finalImages.push(urlInput.trim());
+    }
+
+    if (!nameEn || !price || categoryIds.length === 0 || finalImages.length === 0) {
       alert('Please fill in English Name, Base Price, select at least 1 Category, and upload at least 1 photo.');
       return;
     }
@@ -165,8 +160,8 @@ export default function ProductFormModal({ product, categories = [], onClose, on
         discountValue: Number(discountValue || 0),
         inStock,
         description,
-        images,
-        imageUrl: images[0] || '',
+        images: finalImages,
+        imageUrl: finalImages[0] || '',
         unitVariants
       });
     } finally {

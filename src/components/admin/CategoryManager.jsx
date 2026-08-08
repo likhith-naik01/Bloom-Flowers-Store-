@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { Plus, Trash2, Layers, Upload, CheckCircle2 } from 'lucide-react';
+import { compressImage } from '../../lib/imageCompressor';
 
 export default function CategoryManager({ categories = [], onAddCategory, onDeleteCategory }) {
   const [showAdd, setShowAdd] = useState(false);
@@ -17,23 +18,25 @@ export default function CategoryManager({ categories = [], onAddCategory, onDele
     if (!file) return;
     setUploading(true);
     try {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64Data = reader.result;
-        const res = await fetch('/api/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: base64Data })
-        });
-        const data = await res.json();
-        if (res.ok && data.url) {
-          setImageUrl(data.url);
-        }
+      const compressedData = await compressImage(file, 800, 800, 0.82);
+      if (!compressedData) {
         setUploading(false);
-      };
-      reader.readAsDataURL(file);
+        return;
+      }
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: compressedData })
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        setImageUrl(data.url);
+      } else {
+        setImageUrl(compressedData);
+      }
     } catch (err) {
       console.error(err);
+    } finally {
       setUploading(false);
     }
   };

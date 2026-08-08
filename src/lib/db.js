@@ -76,63 +76,128 @@ export const db = {
   getCategories: async () => {
     if (supabase) {
       const { data, error } = await supabase.from('categories').select('*').order('created_at', { ascending: true });
-      if (!error && data && data.length > 0) return data;
+      if (!error && data && data.length > 0) {
+        return data.map(c => ({
+          ...c,
+          nameEn: c.name || c.nameEn || '',
+          imageUrl: c.image || c.imageUrl || '',
+          image: c.image || c.imageUrl || ''
+        }));
+      }
 
       // Seed initial dummy categories into Supabase if empty
       if (!error && data && data.length === 0) {
         try {
           const insertPayload = INITIAL_CATEGORIES.map(c => ({
             id: c.id,
-            name: c.nameEn,
-            slug: c.nameEn.toLowerCase().replace(/\s+/g, '-'),
-            image: c.image || '',
+            name: c.nameEn || c.name,
+            slug: (c.nameEn || c.name).toLowerCase().replace(/\s+/g, '-'),
+            image: c.image || c.imageUrl || '',
             description: c.description || ''
           }));
           await supabase.from('categories').insert(insertPayload);
           const { data: fresh } = await supabase.from('categories').select('*').order('created_at', { ascending: true });
-          if (fresh && fresh.length > 0) return fresh;
+          if (fresh && fresh.length > 0) {
+            return fresh.map(c => ({
+              ...c,
+              nameEn: c.name || '',
+              imageUrl: c.image || '',
+              image: c.image || ''
+            }));
+          }
         } catch (e) {
           console.error('Category seeding error:', e);
         }
       }
     }
-    return readDb().categories || [];
+    const cats = readDb().categories || [];
+    return cats.map(c => ({
+      ...c,
+      nameEn: c.nameEn || c.name || '',
+      imageUrl: c.imageUrl || c.image || '',
+      image: c.image || c.imageUrl || ''
+    }));
   },
   addCategory: async (cat) => {
-    const newCat = { ...cat, id: cat.id || `cat_${Date.now()}` };
+    const catName = cat.nameEn || cat.name || 'New Category';
+    const catImg = cat.image || cat.imageUrl || '';
+    const newCat = {
+      ...cat,
+      id: cat.id || `cat_${Date.now()}`,
+      name: catName,
+      nameEn: catName,
+      image: catImg,
+      imageUrl: catImg
+    };
+
     if (supabase) {
-      const { data, error } = await supabase.from('categories').insert([{
-        id: newCat.id,
-        name: newCat.name,
-        slug: newCat.slug || newCat.name.toLowerCase().replace(/\s+/g, '-'),
-        image: newCat.image || '',
-        description: newCat.description || ''
-      }]).select().single();
-      if (!error && data) return data;
+      try {
+        const { data, error } = await supabase.from('categories').insert([{
+          id: newCat.id,
+          name: catName,
+          slug: cat.slug || catName.toLowerCase().replace(/\s+/g, '-'),
+          image: catImg,
+          description: cat.description || ''
+        }]).select().single();
+        if (error) console.error('Supabase addCategory error:', error);
+        if (!error && data) {
+          return {
+            ...data,
+            nameEn: data.name || catName,
+            imageUrl: data.image || catImg,
+            image: data.image || catImg
+          };
+        }
+      } catch (err) {
+        console.error('Supabase addCategory exception:', err);
+      }
     }
-    const local = readDb();
-    local.categories = local.categories || [];
-    local.categories.push(newCat);
-    writeDb(local);
+
+    try {
+      const local = readDb();
+      local.categories = local.categories || [];
+      local.categories.push(newCat);
+      writeDb(local);
+    } catch (e) {
+      console.warn('writeDb skipped:', e);
+    }
     return newCat;
   },
   updateCategory: async (id, updated) => {
     if (supabase) {
-      const { data, error } = await supabase.from('categories').update(updated).eq('id', id).select().single();
-      if (!error && data) return data;
+      try {
+        const { data, error } = await supabase.from('categories').update({
+          name: updated.nameEn || updated.name,
+          image: updated.image || updated.imageUrl,
+          description: updated.description
+        }).eq('id', id).select().single();
+        if (!error && data) {
+          return {
+            ...data,
+            nameEn: data.name,
+            imageUrl: data.image
+          };
+        }
+      } catch (e) {
+        console.error('Supabase updateCategory error:', e);
+      }
     }
     const local = readDb();
     local.categories = (local.categories || []).map(c => c.id === id ? { ...c, ...updated } : c);
-    writeDb(local);
+    try { writeDb(local); } catch (e) {}
     return local.categories.find(c => c.id === id);
   },
   deleteCategory: async (id) => {
     if (supabase) {
-      await supabase.from('categories').delete().eq('id', id);
+      try {
+        await supabase.from('categories').delete().eq('id', id);
+      } catch (e) {
+        console.error('Supabase deleteCategory error:', e);
+      }
     }
     const local = readDb();
     local.categories = (local.categories || []).filter(c => c.id !== id);
-    writeDb(local);
+    try { writeDb(local); } catch (e) {}
   },
 
   // Products
@@ -149,6 +214,7 @@ export const db = {
           images: Array.isArray(p.images) && p.images.length > 0 ? p.images : (p.image_url ? [p.image_url] : []),
           categoryIds: p.category_ids || [],
           unitVariants: p.unit_variants || [],
+          discountType: p.discount_type || p.discountType || (Number(p.discount_value || 0) > 0 ? 'percent' : 'none'),
           discountValue: Number(p.discount_value || 0),
           inStock: p.in_stock !== false
         }));
@@ -161,6 +227,7 @@ export const db = {
             id: p.id,
             name: p.nameEn,
             price: Number(p.price),
+            discount_type: p.discountType || 'none',
             discount_value: Number(p.discountValue || 0),
             image_url: p.imageUrl,
             images: Array.isArray(p.images) ? p.images : [p.imageUrl],
@@ -179,6 +246,7 @@ export const db = {
               images: p.images || [p.image_url],
               categoryIds: p.category_ids || [],
               unitVariants: p.unit_variants || [],
+              discountType: p.discount_type || 'none',
               discountValue: Number(p.discount_value || 0),
               inStock: p.in_stock !== false
             }));
@@ -195,7 +263,8 @@ export const db = {
       categoryIds: Array.isArray(p.categoryIds) ? p.categoryIds : (p.categoryId ? [p.categoryId] : []),
       images: Array.isArray(p.images) && p.images.length > 0 ? p.images : (p.imageUrl ? [p.imageUrl] : []),
       imageUrl: p.imageUrl || (Array.isArray(p.images) && p.images[0] ? p.images[0] : ''),
-      unitVariants: Array.isArray(p.unitVariants) ? p.unitVariants : []
+      unitVariants: Array.isArray(p.unitVariants) ? p.unitVariants : [],
+      discountType: p.discountType || 'none'
     }));
   },
   getProductById: async (id) => {
@@ -209,6 +278,7 @@ export const db = {
           images: Array.isArray(data.images) && data.images.length > 0 ? data.images : (data.image_url ? [data.image_url] : []),
           categoryIds: data.category_ids || [],
           unitVariants: data.unit_variants || [],
+          discountType: data.discount_type || data.discountType || (Number(data.discount_value || 0) > 0 ? 'percent' : 'none'),
           discountValue: Number(data.discount_value || 0),
           inStock: data.in_stock !== false
         };
@@ -231,34 +301,42 @@ export const db = {
       images: imagesList,
       imageUrl: imagesList[0] || '',
       price: Number(prod.price),
+      discountType: prod.discountType || 'none',
       discountValue: Number(prod.discountValue || 0),
       unitVariants: Array.isArray(prod.unitVariants) ? prod.unitVariants : [],
       inStock: prod.inStock !== false
     };
 
     if (supabase) {
-      const { data, error } = await supabase.from('products').insert([{
-        id: newProd.id,
-        name: productName,
-        price: newProd.price,
-        discount_value: newProd.discountValue,
-        image_url: newProd.imageUrl,
-        images: newProd.images,
-        category_ids: newProd.categoryIds,
-        unit_variants: newProd.unitVariants,
-        in_stock: newProd.inStock,
-        description: newProd.description || ''
-      }]).select().single();
-      if (error) {
-        console.error('Supabase addProduct error:', error);
+      try {
+        const { data, error } = await supabase.from('products').insert([{
+          id: newProd.id,
+          name: productName,
+          price: newProd.price,
+          discount_type: newProd.discountType,
+          discount_value: newProd.discountValue,
+          image_url: newProd.imageUrl,
+          images: newProd.images,
+          category_ids: newProd.categoryIds,
+          unit_variants: newProd.unitVariants,
+          in_stock: newProd.inStock,
+          description: newProd.description || ''
+        }]).select().single();
+        if (error) console.error('Supabase addProduct error:', error);
+        if (!error && data) return newProd;
+      } catch (err) {
+        console.error('Supabase addProduct exception:', err);
       }
-      if (!error && data) return newProd;
     }
 
-    const local = readDb();
-    local.products = local.products || [];
-    local.products.push(newProd);
-    writeDb(local);
+    try {
+      const local = readDb();
+      local.products = local.products || [];
+      local.products.push(newProd);
+      writeDb(local);
+    } catch (e) {
+      console.warn('writeDb skipped:', e);
+    }
     return newProd;
   },
   updateProduct: async (id, updated) => {
@@ -271,31 +349,31 @@ export const db = {
     const productName = updated.nameEn || updated.name;
 
     if (supabase) {
-      const payload = {};
-      if (productName !== undefined) payload.name = productName;
-      if (updated.price !== undefined) payload.price = Number(updated.price);
-      if (updated.discountValue !== undefined) payload.discount_value = Number(updated.discountValue);
-      if (imagesList.length > 0) {
-        payload.images = imagesList;
-        payload.image_url = imagesList[0];
-      }
-      if (categoryIdsList.length > 0) payload.category_ids = categoryIdsList;
-      if (updated.unitVariants !== undefined) payload.unit_variants = updated.unitVariants;
-      if (updated.inStock !== undefined) payload.in_stock = updated.inStock;
-      if (updated.description !== undefined) payload.description = updated.description;
+      try {
+        const payload = {};
+        if (productName !== undefined) payload.name = productName;
+        if (updated.price !== undefined) payload.price = Number(updated.price);
+        if (updated.discountType !== undefined) payload.discount_type = updated.discountType;
+        if (updated.discountValue !== undefined) payload.discount_value = Number(updated.discountValue);
+        if (imagesList.length > 0) {
+          payload.images = imagesList;
+          payload.image_url = imagesList[0];
+        }
+        if (categoryIdsList.length > 0) payload.category_ids = categoryIdsList;
+        if (updated.unitVariants !== undefined) payload.unit_variants = updated.unitVariants;
+        if (updated.inStock !== undefined) payload.in_stock = updated.inStock;
+        if (updated.description !== undefined) payload.description = updated.description;
 
-      const { data, error } = await supabase.from('products').update(payload).eq('id', id).select().single();
-      if (error) {
-        console.error('Supabase updateProduct error:', error);
+        const { data, error } = await supabase.from('products').update(payload).eq('id', id).select().single();
+        if (error) console.error('Supabase updateProduct error:', error);
+      } catch (e) {
+        console.error('Supabase updateProduct exception:', e);
       }
-      if (!error && data) return db.getProductById(id);
     }
+
     const local = readDb();
     local.products = (local.products || []).map(p => {
       if (p.id === id) {
-        const imgs = imagesList.length > 0 ? imagesList : (Array.isArray(p.images) ? p.images : [p.imageUrl]);
-        const cats = categoryIdsList.length > 0 ? categoryIdsList : (Array.isArray(p.categoryIds) ? p.categoryIds : [p.categoryId]);
-
         return {
           ...p,
           ...updated,

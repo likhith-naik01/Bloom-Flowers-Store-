@@ -436,14 +436,20 @@ export default function AdminDashboard() {
               </div>
 
               <div className="space-y-2.5">
-                {products.map((p) => (
-                  <div
-                    key={p.id}
-                    className="glass-panel p-3 rounded-2xl border border-white/10 flex items-center gap-3"
-                  >
-                    <div className="relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0">
-                      <Image src={p.imageUrl} alt={p.nameEn} fill className={`object-cover ${!p.inStock ? 'grayscale opacity-60' : ''}`} />
-                    </div>
+                {products.map((p) => {
+                  const prodImg = p.imageUrl || (Array.isArray(p.images) && p.images[0]) || p.image || '';
+                  return (
+                    <div
+                      key={p.id}
+                      className="glass-panel p-3 rounded-2xl border border-white/10 flex items-center gap-3"
+                    >
+                      <div className="relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-slate-800 border border-white/10">
+                        {prodImg ? (
+                          <img src={prodImg} alt={p.nameEn || p.name} className={`w-full h-full object-cover ${!p.inStock ? 'grayscale opacity-60' : ''}`} />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-500 text-lg">🌸</div>
+                        )}
+                      </div>
 
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-sm text-white truncate">{p.nameEn}</h3>
