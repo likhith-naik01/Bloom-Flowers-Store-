@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import Header from '../components/layout/Header';
 import BottomNav from '../components/layout/BottomNav';
 import { CheckCircle2, MessageCircle, Clock, ArrowRight, PackageCheck } from 'lucide-react';
+import { generateCustomerWhatsAppLink } from '../lib/whatsapp';
 
 export default function OrderSuccess() {
   const router = useRouter();
@@ -62,7 +63,7 @@ export default function OrderSuccess() {
           </div>
 
           {order && (
-            <div className="w-full glass-panel p-4 rounded-2xl text-left mb-6 border border-white/10 space-y-2">
+            <div className="w-full glass-panel p-4 rounded-2xl text-left mb-4 border border-white/10 space-y-2">
               <div className="flex justify-between items-center pb-2 border-b border-white/10 text-xs">
                 <span className="text-slate-400">Customer Name</span>
                 <span className="font-bold text-white">{order.customerName}</span>
@@ -79,6 +80,17 @@ export default function OrderSuccess() {
           )}
 
           <div className="flex flex-col gap-2.5 w-full">
+            {order && (
+              <a
+                href={generateCustomerWhatsAppLink(order)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 transition-all"
+              >
+                <MessageCircle className="w-4 h-4" /> Message Shop Owner on WhatsApp
+              </a>
+            )}
+
             <Link
               href="/my-orders"
               className="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 border border-white/10"

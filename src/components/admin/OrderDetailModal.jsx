@@ -36,7 +36,15 @@ export default function OrderDetailModal({ order, onClose, onUpdateStatus }) {
         
         // Open WhatsApp deep-link with the updated delivery fee & total
         const waUrl = generateAdminWhatsAppLink(updatedOrder, payload.deliveryCharge, isBulkOrder);
-        window.open(waUrl, '_blank');
+        
+        if (typeof window !== 'undefined') {
+          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+          if (isMobile) {
+            window.location.href = waUrl;
+          } else {
+            window.open(waUrl, '_blank');
+          }
+        }
       } else {
         alert('Failed to save delivery charge. Please try again.');
       }
