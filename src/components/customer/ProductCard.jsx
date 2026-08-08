@@ -17,7 +17,7 @@ export default function ProductCard({ product }) {
 
   const variants = Array.isArray(product.unitVariants) && product.unitVariants.length > 0
     ? product.unitVariants
-    : [{ unit: product.unit || 'bunch', price: product.price || 0 }];
+    : [{ unit: product.unit || 'piece', price: product.price || 0 }];
 
   const [selectedVariant, setSelectedVariant] = useState(variants[0]);
 

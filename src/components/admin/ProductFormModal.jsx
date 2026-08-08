@@ -412,11 +412,14 @@ export default function ProductFormModal({ product, categories = [], onClose, on
                 onChange={(e) => setUnit(e.target.value)}
                 className="w-full p-2 rounded-xl glass-panel text-xs text-white bg-slate-900 border border-white/10 focus:outline-none"
               >
+                <option value="piece">Piece</option>
                 <option value="bunch">Bunch</option>
+                <option value="garland">Garland / Mala</option>
                 <option value="kg">kg</option>
                 <option value="gram">gram</option>
-                <option value="piece">piece</option>
                 <option value="dozen">dozen</option>
+                <option value="pack">Pack / Box</option>
+                <option value="meter">Meter / Ft</option>
               </select>
             </div>
           </div>

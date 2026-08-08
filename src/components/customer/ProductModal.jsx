@@ -13,7 +13,7 @@ export default function ProductModal({ product, onClose }) {
 
   const variants = Array.isArray(product.unitVariants) && product.unitVariants.length > 0
     ? product.unitVariants
-    : [{ unit: product.unit, price: product.price }];
+    : [{ unit: product.unit || 'piece', price: product.price }];
 
   const [selectedVariant, setSelectedVariant] = useState(variants[0]);
   const [qty, setQty] = useState(1);

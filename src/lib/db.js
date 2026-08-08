@@ -210,6 +210,7 @@ export const db = {
           nameEn: p.name || p.nameEn || '',
           nameHi: p.nameHi || '',
           nameKn: p.nameKn || '',
+          unit: p.unit || 'bunch',
           imageUrl: p.image_url || (Array.isArray(p.images) && p.images[0] ? p.images[0] : ''),
           images: Array.isArray(p.images) && p.images.length > 0 ? p.images : (p.image_url ? [p.image_url] : []),
           categoryIds: p.category_ids || [],
@@ -227,6 +228,7 @@ export const db = {
             id: p.id,
             name: p.nameEn,
             price: Number(p.price),
+            unit: p.unit || 'bunch',
             discount_type: p.discountType || 'none',
             discount_value: Number(p.discountValue || 0),
             image_url: p.imageUrl,
@@ -313,6 +315,7 @@ export const db = {
           id: newProd.id,
           name: productName,
           price: newProd.price,
+          unit: newProd.unit || 'bunch',
           discount_type: newProd.discountType,
           discount_value: newProd.discountValue,
           image_url: newProd.imageUrl,
@@ -353,6 +356,7 @@ export const db = {
         const payload = {};
         if (productName !== undefined) payload.name = productName;
         if (updated.price !== undefined) payload.price = Number(updated.price);
+        if (updated.unit !== undefined) payload.unit = updated.unit;
         if (updated.discountType !== undefined) payload.discount_type = updated.discountType;
         if (updated.discountValue !== undefined) payload.discount_value = Number(updated.discountValue);
         if (imagesList.length > 0) {
@@ -379,6 +383,7 @@ export const db = {
           ...updated,
           name: productName || p.name,
           nameEn: productName || p.nameEn || p.name,
+          unit: updated.unit !== undefined ? updated.unit : (p.unit || 'bunch'),
           categoryIds: categoryIdsList.length > 0 ? categoryIdsList : p.categoryIds || [],
           images: imagesList.length > 0 ? imagesList : p.images || [],
           imageUrl: imagesList[0] || p.imageUrl || '',
