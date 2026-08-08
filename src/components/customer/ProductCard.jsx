@@ -16,7 +16,7 @@ export default function ProductCard({ product }) {
   const displayImage = imagesList[0] || rawImg || '';
 
   const variants = Array.isArray(product.unitVariants) && product.unitVariants.length > 0
-    ? product.unitVariants
+    ? product.unitVariants.map((v, i) => (i === 0 && product.unit ? { ...v, unit: product.unit } : v))
     : [{ unit: product.unit || 'piece', price: product.price || 0 }];
 
   const [selectedVariant, setSelectedVariant] = useState(variants[0]);

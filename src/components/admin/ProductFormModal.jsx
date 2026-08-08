@@ -165,8 +165,8 @@ export default function ProductFormModal({ product, categories = [], onClose, on
     setSaving(true);
     try {
       const finalUnit = unit || 'piece';
-      const finalVariants = Array.isArray(unitVariants) && unitVariants.length > 0
-        ? unitVariants
+      let finalVariants = Array.isArray(unitVariants) && unitVariants.length > 0
+        ? unitVariants.map((v, i) => (i === 0 ? { ...v, unit: finalUnit, price: Number(price) } : v))
         : [{ unit: finalUnit, price: Number(price) }];
 
       await onSave({
@@ -430,7 +430,16 @@ export default function ProductFormModal({ product, categories = [], onClose, on
               <label className="text-xs font-semibold text-slate-300 mb-1 block">Default Unit *</label>
               <select
                 value={unit}
-                onChange={(e) => setUnit(e.target.value)}
+                onChange={(e) => {
+                  const selected = e.target.value;
+                  setUnit(selected);
+                  setUnitVariants((prev) => {
+                    if (!prev || prev.length <= 1) {
+                      return [{ unit: selected, price: Number(price || 0) }];
+                    }
+                    return prev.map((v, i) => (i === 0 ? { ...v, unit: selected } : v));
+                  });
+                }}
                 className="w-full p-2 rounded-xl glass-panel text-xs text-white bg-slate-900 border border-white/10 focus:outline-none"
               >
                 <option value="piece">Piece</option>

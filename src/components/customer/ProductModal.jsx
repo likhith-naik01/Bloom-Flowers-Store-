@@ -12,7 +12,7 @@ export default function ProductModal({ product, onClose }) {
   const [activeImgIndex, setActiveImgIndex] = useState(0);
 
   const variants = Array.isArray(product.unitVariants) && product.unitVariants.length > 0
-    ? product.unitVariants
+    ? product.unitVariants.map((v, i) => (i === 0 && product.unit ? { ...v, unit: product.unit } : v))
     : [{ unit: product.unit || 'piece', price: product.price }];
 
   const [selectedVariant, setSelectedVariant] = useState(variants[0]);
