@@ -10,6 +10,7 @@ import OrderStatusBadge from '../../components/admin/OrderStatusBadge';
 import OrderDetailModal from '../../components/admin/OrderDetailModal';
 import ProductFormModal from '../../components/admin/ProductFormModal';
 import CategoryManager from '../../components/admin/CategoryManager';
+import BannerManager from '../../components/admin/BannerManager';
 import { generateAdminWhatsAppLink } from '../../lib/whatsapp';
 import { getOrderItemDetails } from '../../lib/orderHelper';
 import {
