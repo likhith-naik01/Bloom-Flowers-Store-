@@ -89,16 +89,16 @@ export default function Home() {
                 </div>
               )}
 
-              {/* All Flowers Preview */}
+              {/* All Flowers Catalog */}
               <div className="my-6">
                 <div className="flex items-center justify-between mb-3 px-1">
                   <h2 className="text-base font-bold text-white flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-amber-400" /> Popular Fresh Blooms
+                    <Sparkles className="w-4 h-4 text-amber-400" /> Fresh Flowers Catalog ({products.length})
                   </h2>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  {products.slice(0, 6).map((p) => (
+                  {products.map((p) => (
                     <ProductCard key={p.id} product={p} />
                   ))}
                 </div>

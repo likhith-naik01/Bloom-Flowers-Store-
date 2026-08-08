@@ -205,7 +205,7 @@ export const db = {
     if (supabase) {
       const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
       if (!error && data && data.length > 0) {
-        return data.map((p, idx) => ({
+        const mapped = data.map((p, idx) => ({
           ...p,
           slNo: Number(p.sl_no || p.slNo || (idx + 1)),
           nameEn: p.name || p.nameEn || '',
@@ -220,6 +220,7 @@ export const db = {
           discountValue: Number(p.discount_value || 0),
           inStock: p.in_stock !== false
         }));
+        return mapped.sort((a, b) => Number(b.slNo || 0) - Number(a.slNo || 0));
       }
 
       // Seed initial dummy products into Supabase if empty
@@ -259,8 +260,9 @@ export const db = {
         }
       }
     }
+
     const prods = readDb().products || [];
-    return prods.map((p, idx) => ({
+    const list = prods.map((p, idx) => ({
       ...p,
       slNo: Number(p.sl_no || p.slNo || (idx + 1)),
       nameEn: p.nameEn || p.name || '',
@@ -271,6 +273,7 @@ export const db = {
       unitVariants: Array.isArray(p.unitVariants) ? p.unitVariants : [],
       discountType: p.discountType || 'none'
     }));
+    return list.sort((a, b) => Number(b.slNo || 0) - Number(a.slNo || 0));
   },
   getProductById: async (id) => {
     if (supabase) {
