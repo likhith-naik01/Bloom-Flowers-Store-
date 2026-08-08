@@ -57,6 +57,8 @@ export default function Checkout() {
           nameEn: item.nameEn,
           quantity: item.quantity,
           unit: item.unit,
+          selectedUnit: item.selectedUnit || item.unit,
+          imageUrl: item.imageUrl || (Array.isArray(item.images) && item.images[0]) || item.image || '',
           price: getItemEffectivePrice(item)
         })),
         total: cartTotal

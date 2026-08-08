@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
-import { X, MessageCircle, Phone, MapPin, Calendar, Clock, ShoppingBag, Truck, Gift, Save, CheckSquare, Square } from 'lucide-react';
-import OrderStatusBadge from './OrderStatusBadge';
-import { generateAdminWhatsAppLink } from '../../lib/whatsapp';
+import { useShop } from '../../context/ShopContext';
 
 export default function OrderDetailModal({ order, onClose, onUpdateStatus }) {
   if (!order) return null;
+  const { products = [] } = useShop();
 
   const [deliveryCharge, setDeliveryCharge] = useState(order.deliveryCharge !== undefined ? order.deliveryCharge : 0);
   const [isBulkOrder, setIsBulkOrder] = useState(!!order.isBulkOrder);
@@ -122,18 +120,34 @@ export default function OrderDetailModal({ order, onClose, onUpdateStatus }) {
             <ShoppingBag className="w-3.5 h-3.5" /> Ordered Items ({order.items.length})
           </h3>
           <div className="space-y-2">
-            {order.items.map((it, idx) => (
-              <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/40 border border-white/5 text-xs text-white">
-                <div>
-                  <span className="font-bold">{it.nameEn}</span>
-                  <span className="text-rose-300 block text-[10px]">₹{it.price} / {it.unit}</span>
+            {order.items.map((it, idx) => {
+              const matchingProd = products.find((p) => p.id === it.id || p.nameEn === it.nameEn);
+              const itemImg = it.imageUrl || it.image || (Array.isArray(it.images) && it.images[0]) || matchingProd?.imageUrl || (matchingProd?.images && matchingProd.images[0]) || '';
+
+              return (
+                <div key={idx} className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-900/40 border border-white/5 text-xs text-white">
+                  <div className="relative w-11 h-11 rounded-xl overflow-hidden flex-shrink-0 bg-slate-800 border border-white/10">
+                    {itemImg ? (
+                      <img src={itemImg} alt={it.nameEn} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-500 text-base">🌸</div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <span className="font-bold block text-white truncate">{it.nameEn}</span>
+                    <span className="text-rose-300 block text-[10px]">
+                      ₹{it.price} / {it.selectedUnit || it.unit}
+                    </span>
+                  </div>
+
+                  <div className="text-right flex-shrink-0">
+                    <span className="font-semibold text-slate-300 block text-[11px]">Qty: {it.quantity}</span>
+                    <span className="font-extrabold text-white text-xs">₹{it.price * it.quantity}</span>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <span className="font-semibold text-slate-300">Qty: {it.quantity}</span>
-                  <span className="font-extrabold text-white block text-sm">₹{it.price * it.quantity}</span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="flex justify-between items-center pt-2 mt-2 text-xs text-slate-300">

@@ -365,6 +365,32 @@ export default function AdminDashboard() {
                         {ord.orderNote && <p className="text-amber-300 italic text-[11px] mt-1">Note: "{ord.orderNote}"</p>}
                       </div>
 
+                      {/* Ordered Flower Items Preview */}
+                      {Array.isArray(ord.items) && ord.items.length > 0 && (
+                        <div className="bg-slate-900/60 p-2 rounded-xl border border-white/5 space-y-1.5 my-2">
+                          {ord.items.map((it, idx) => {
+                            const matchingProd = products.find((p) => p.id === it.id || p.nameEn === it.nameEn);
+                            const itemImg = it.imageUrl || it.image || (Array.isArray(it.images) && it.images[0]) || matchingProd?.imageUrl || (matchingProd?.images && matchingProd.images[0]) || '';
+
+                            return (
+                              <div key={idx} className="flex items-center gap-2 text-xs text-white">
+                                <div className="relative w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 bg-slate-800 border border-white/10">
+                                  {itemImg ? (
+                                    <img src={itemImg} alt={it.nameEn} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-slate-500 text-xs">🌸</div>
+                                  )}
+                                </div>
+                                <span className="font-semibold text-xs flex-1 truncate">{it.nameEn}</span>
+                                <span className="text-[11px] text-slate-400 font-bold">
+                                  x{it.quantity} ({it.selectedUnit || it.unit})
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
                       <div className="flex items-center justify-between pt-2 border-t border-white/10">
                         <span className="text-sm font-extrabold text-rose-400">Total: ₹{ord.total}</span>
 
@@ -414,7 +440,34 @@ export default function AdminDashboard() {
                         onChangeStatus={(s) => handleUpdateOrderStatus(ord.id, s)}
                       />
                     </div>
-                    <div className="flex items-center justify-between text-xs text-slate-300 pt-2">
+
+                    {/* Ordered Flower Items Preview */}
+                    {Array.isArray(ord.items) && ord.items.length > 0 && (
+                      <div className="bg-slate-900/60 p-2 rounded-xl border border-white/5 space-y-1.5 my-2">
+                        {ord.items.map((it, idx) => {
+                          const matchingProd = products.find((p) => p.id === it.id || p.nameEn === it.nameEn);
+                          const itemImg = it.imageUrl || it.image || (Array.isArray(it.images) && it.images[0]) || matchingProd?.imageUrl || (matchingProd?.images && matchingProd.images[0]) || '';
+
+                          return (
+                            <div key={idx} className="flex items-center gap-2 text-xs text-white">
+                              <div className="relative w-7 h-7 rounded-lg overflow-hidden flex-shrink-0 bg-slate-800 border border-white/10">
+                                {itemImg ? (
+                                  <img src={itemImg} alt={it.nameEn} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-slate-500 text-xs">🌸</div>
+                                )}
+                              </div>
+                              <span className="font-semibold text-xs flex-1 truncate">{it.nameEn}</span>
+                              <span className="text-[11px] text-slate-400 font-bold">
+                                x{it.quantity}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between text-xs text-slate-300 pt-2 border-t border-white/10">
                       <span>Delivered on {ord.deliveryDate}</span>
                       <span className="font-extrabold text-emerald-400">₹{ord.total}</span>
                     </div>

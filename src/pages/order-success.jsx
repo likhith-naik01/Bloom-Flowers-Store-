@@ -4,12 +4,14 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Header from '../components/layout/Header';
 import BottomNav from '../components/layout/BottomNav';
+import { useShop } from '../context/ShopContext';
 import { CheckCircle2, MessageCircle, Clock, ArrowRight, PackageCheck } from 'lucide-react';
 import { generateCustomerWhatsAppLink } from '../lib/whatsapp';
 
 export default function OrderSuccess() {
   const router = useRouter();
   const { id } = router.query;
+  const { products = [] } = useShop();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -72,7 +74,36 @@ export default function OrderSuccess() {
                 <span className="text-slate-400">Delivery Date</span>
                 <span className="font-bold text-white">{order.deliveryDate} ({order.deliveryTimeSlot})</span>
               </div>
-              <div className="flex justify-between items-center text-xs">
+
+              {/* Items List with Thumbnails */}
+              {Array.isArray(order.items) && order.items.length > 0 && (
+                <div className="py-2 border-b border-white/10 space-y-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Ordered Items</span>
+                  {order.items.map((it, idx) => {
+                    const matchingProd = products.find((p) => p.id === it.id || p.nameEn === it.nameEn);
+                    const itemImg = it.imageUrl || it.image || (Array.isArray(it.images) && it.images[0]) || matchingProd?.imageUrl || (matchingProd?.images && matchingProd.images[0]) || '';
+
+                    return (
+                      <div key={idx} className="flex items-center gap-2.5 text-xs text-white">
+                        <div className="relative w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 bg-slate-800 border border-white/10">
+                          {itemImg ? (
+                            <img src={itemImg} alt={it.nameEn} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-500 text-xs">🌸</div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="font-bold block truncate text-slate-200">{it.nameEn}</span>
+                          <span className="text-[10px] text-slate-400">Qty: {it.quantity} ({it.selectedUnit || it.unit})</span>
+                        </div>
+                        <span className="font-extrabold text-white text-xs">₹{it.price * it.quantity}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              <div className="flex justify-between items-center text-xs pt-1">
                 <span className="text-slate-400">Total Amount</span>
                 <span className="font-extrabold text-rose-400 text-sm">₹{order.total} (COD)</span>
               </div>
