@@ -247,7 +247,7 @@ export const db = {
             return { ...p, slNo: sl };
           });
 
-          return uniqueList.sort((a, b) => Number(b.slNo || 0) - Number(a.slNo || 0));
+          return uniqueList.sort((a, b) => Number(a.slNo || 0) - Number(b.slNo || 0));
         }
       } catch (e) {
         console.error('Supabase getProducts error:', e);
@@ -266,7 +266,7 @@ export const db = {
       unitVariants: Array.isArray(p.unitVariants) ? p.unitVariants : [],
       discountType: p.discountType || 'none'
     }));
-    return list.sort((a, b) => Number(b.slNo || 0) - Number(a.slNo || 0));
+    return list.sort((a, b) => Number(a.slNo || 0) - Number(a.slNo || 0));
   },
   getProductById: async (id) => {
     if (supabase) {

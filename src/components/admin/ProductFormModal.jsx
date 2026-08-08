@@ -166,9 +166,9 @@ export default function ProductFormModal({ product, existingProducts = [], autoS
       return;
     }
 
-    if (slNo && existingProducts.some((p) => p.id !== product?.id && Number(p.slNo) === Number(slNo))) {
-      alert(`⚠️ Serial Number SL-${slNo} is already assigned to another product. Each product must have a unique serial number.`);
-      return;
+    let targetSlNo = slNo ? Number(slNo) : (autoSlNo || 1);
+    while (existingProducts.some((p) => p.id !== product?.id && Number(p.slNo) === targetSlNo)) {
+      targetSlNo += 1;
     }
 
     setSaving(true);
@@ -186,7 +186,7 @@ export default function ProductFormModal({ product, existingProducts = [], autoS
         categoryIds,
         price: Number(price),
         unit: finalUnit,
-        slNo: slNo ? Number(slNo) : undefined,
+        slNo: targetSlNo,
         discountType,
         discountValue: Number(discountValue || 0),
         inStock,
