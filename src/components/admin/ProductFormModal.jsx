@@ -420,7 +420,7 @@ export default function ProductFormModal({ product, autoSlNo, categories = [], o
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-300 mb-1 block">Default Unit *</label>
+              <label className="text-xs font-semibold text-slate-300 mb-1 block">Unit *</label>
               <select
                 value={unit}
                 onChange={(e) => {
