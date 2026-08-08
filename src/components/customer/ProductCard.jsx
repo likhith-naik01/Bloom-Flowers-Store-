@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Plus, Check, AlertCircle, Eye, Images } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
@@ -25,7 +25,7 @@ export default function ProductCard({ product }) {
     if (variants && variants.length > 0) {
       setSelectedVariant(variants[0]);
     }
-  }, [product.unit, product.price, JSON.stringify(product.unitVariants)]);
+  }, [product?.id, product?.unit, product?.price]);
 
   const effectivePrice = getItemEffectivePrice({ ...product, price: selectedVariant.price });
   const hasDiscount = effectivePrice < selectedVariant.price;

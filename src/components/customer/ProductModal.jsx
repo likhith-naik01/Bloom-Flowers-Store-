@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { X, Plus, Minus, Check, ShoppingBag, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
@@ -21,7 +21,7 @@ export default function ProductModal({ product, onClose }) {
     if (variants && variants.length > 0) {
       setSelectedVariant(variants[0]);
     }
-  }, [product?.unit, product?.price, JSON.stringify(product?.unitVariants)]);
+  }, [product?.id, product?.unit, product?.price]);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
 
