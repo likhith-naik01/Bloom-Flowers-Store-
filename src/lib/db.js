@@ -339,13 +339,17 @@ export const db = {
           description: newProd.description || ''
         };
 
-        try {
-          const { data, error } = await supabase.from('products').insert([{ ...payload, sl_no: newProd.slNo }]).select().single();
-          if (!error && data) return newProd;
-        } catch (e1) {}
+        const res1 = await supabase.from('products').insert([{ ...payload, sl_no: newProd.slNo }]).select().single();
+        if (!res1.error && res1.data) {
+          return newProd;
+        }
 
-        const { data, error } = await supabase.from('products').insert([payload]).select().single();
-        if (!error && data) return newProd;
+        const res2 = await supabase.from('products').insert([payload]).select().single();
+        if (!res2.error && res2.data) {
+          return newProd;
+        }
+
+        console.error('Supabase addProduct insert errors:', res1.error, res2.error);
       } catch (err) {
         console.error('Supabase addProduct exception:', err);
       }

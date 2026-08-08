@@ -16,6 +16,12 @@ export default function ProductModal({ product, onClose }) {
     : [{ unit: product.unit || 'piece', price: product.price }];
 
   const [selectedVariant, setSelectedVariant] = useState(variants[0]);
+
+  useEffect(() => {
+    if (variants && variants.length > 0) {
+      setSelectedVariant(variants[0]);
+    }
+  }, [product?.unit, product?.price, JSON.stringify(product?.unitVariants)]);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
 

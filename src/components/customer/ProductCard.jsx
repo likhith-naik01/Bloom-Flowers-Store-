@@ -21,6 +21,12 @@ export default function ProductCard({ product }) {
 
   const [selectedVariant, setSelectedVariant] = useState(variants[0]);
 
+  useEffect(() => {
+    if (variants && variants.length > 0) {
+      setSelectedVariant(variants[0]);
+    }
+  }, [product.unit, product.price, JSON.stringify(product.unitVariants)]);
+
   const effectivePrice = getItemEffectivePrice({ ...product, price: selectedVariant.price });
   const hasDiscount = effectivePrice < selectedVariant.price;
 

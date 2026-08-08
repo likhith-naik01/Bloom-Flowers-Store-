@@ -406,18 +406,7 @@ export default function ProductFormModal({ product, autoSlNo, categories = [], o
           </div>
 
           {/* Pricing & Unit Options */}
-          <div className="grid grid-cols-3 gap-2">
-            <div>
-              <label className="text-xs font-semibold text-slate-300 mb-1 block">SL No (Code)</label>
-              <input
-                type="number"
-                placeholder="Auto (1, 2...)"
-                value={slNo}
-                onChange={(e) => setSlNo(e.target.value)}
-                className="w-full p-2 rounded-xl glass-panel text-xs text-white placeholder-slate-500 border border-white/10 focus:outline-none"
-              />
-            </div>
-
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-semibold text-slate-300 mb-1 block">Base Price (₹) *</label>
               <input
