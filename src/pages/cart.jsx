@@ -40,14 +40,19 @@ export default function Cart() {
                 {cart.map((item) => {
                   const effectivePrice = getItemEffectivePrice(item);
                   const itemTotal = effectivePrice * item.quantity;
+                  const cartImg = item.imageUrl || (Array.isArray(item.images) && item.images[0]) || item.image || '';
 
                   return (
                     <div
                       key={item.id}
                       className="glass-panel p-3 rounded-2xl border border-white/10 flex items-center gap-3"
                     >
-                      <div className="relative w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
-                        <Image src={item.imageUrl} alt={item.nameEn} fill className="object-cover" />
+                      <div className="relative w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-slate-800 border border-white/10">
+                        {cartImg ? (
+                          <img src={cartImg} alt={item.nameEn || item.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-500 text-lg">🌸</div>
+                        )}
                       </div>
 
                       <div className="flex-1 min-w-0">

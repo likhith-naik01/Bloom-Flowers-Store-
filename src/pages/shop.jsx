@@ -68,7 +68,7 @@ export default function Shop() {
                     : 'bg-slate-800/80 text-slate-300 border border-white/5 hover:bg-slate-700'
                 }`}
               >
-                {cat.nameEn}
+                {cat.nameEn || cat.name}
               </button>
             ))}
           </div>
