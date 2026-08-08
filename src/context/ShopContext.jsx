@@ -107,20 +107,28 @@ export function ShopProvider({ children }) {
     }
   };
 
-  const fetchShopData = async () => {
+  const fetchShopData = async (full = true) => {
     try {
       const isAdminSession =
         typeof window !== 'undefined' && localStorage.getItem('flower_shop_admin') === 'true';
 
-      const fetchPromises = [
-        fetch('/api/categories'),
-        fetch('/api/products'),
-        fetch('/api/banner')
-      ];
+      const fetchPromises = [];
+      
+      if (full || !initialFetchDone.current) {
+        fetchPromises.push(fetch('/api/categories'));
+        fetchPromises.push(fetch('/api/products'));
+        fetchPromises.push(fetch('/api/banner'));
+      } else {
+        fetchPromises.push(Promise.resolve(null));
+        fetchPromises.push(Promise.resolve(null));
+        fetchPromises.push(Promise.resolve(null));
+      }
 
       // Fetch orders for admin or initial setup
       if (isAdminSession || !initialFetchDone.current) {
         fetchPromises.push(fetch('/api/orders'));
+      } else {
+        fetchPromises.push(Promise.resolve(null));
       }
 
       const results = await Promise.all(fetchPromises);
@@ -138,20 +146,18 @@ export function ShopProvider({ children }) {
         setOrders(fetchedOrders);
 
         if (!initialFetchDone.current) {
-          // On first load, record all existing order IDs as already notified so they don't chime
           fetchedOrders.forEach((o) => notifiedOrderIdsRef.current.add(o.id));
           initialFetchDone.current = true;
         } else if (isAdminSession) {
-          // Find newly arrived orders that have NEVER been chimed for (ADMIN ONLY)
           const unnotifiedNewOrders = fetchedOrders.filter(
             (o) => o.status === 'new' && !notifiedOrderIdsRef.current.has(o.id)
           );
 
           if (unnotifiedNewOrders.length > 0) {
             unnotifiedNewOrders.forEach((newOrd) => {
-              notifiedOrderIdsRef.current.add(newOrd.id); // Mark immediately as notified
+              notifiedOrderIdsRef.current.add(newOrd.id);
               setNewOrderAlert(newOrd);
-              playOrderChime(); // Single 1-time chime sound ONLY for logged-in Admin!
+              playOrderChime();
               triggerBrowserNotification(newOrd);
             });
           }
@@ -165,14 +171,24 @@ export function ShopProvider({ children }) {
   };
 
   useEffect(() => {
-    fetchShopData();
+    fetchShopData(true);
     
-    // Auto-poll every 4 seconds for immediate order notifications
+    // Lightweight polling every 15 seconds for new orders only
     const interval = setInterval(() => {
-      fetchShopData();
-    }, 4000);
+      fetchShopData(false);
+    }, 15000);
 
-    return () => clearInterval(interval);
+    const handleFocus = () => fetchShopData(true);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', handleFocus);
+    }
+
+    return () => {
+      clearInterval(interval);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('focus', handleFocus);
+      }
+    };
   }, []);
 
   const refreshData = () => fetchShopData();
