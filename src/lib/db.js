@@ -458,15 +458,22 @@ export const db = {
   // Banners
   getBanners: async () => {
     if (supabase) {
-      const { data, error } = await supabase.from('banners').select('*').eq('active', true);
-      if (!error && data && data.length > 0) {
-        return data.map(b => ({
-          ...b,
-          imageUrl: b.image_url || b.imageUrl || '',
-          title: b.title || '',
-          subtitle: b.subtitle || '',
-          badge: b.badge || ''
-        }));
+      try {
+        let res = await supabase.from('banners').select('*').eq('active', true);
+        if (res.error || !res.data || res.data.length === 0) {
+          res = await supabase.from('banners').select('*');
+        }
+        if (!res.error && res.data && res.data.length > 0) {
+          return res.data.map(b => ({
+            ...b,
+            imageUrl: b.image_url || b.imageUrl || '',
+            title: b.title || '',
+            subtitle: b.subtitle || '',
+            badge: b.badge || ''
+          }));
+        }
+      } catch (e) {
+        console.error('Supabase getBanners error:', e);
       }
     }
     const localBanners = readDb().banners || [];
@@ -491,9 +498,22 @@ export const db = {
 
     if (supabase) {
       try {
-        const { data, error } = await supabase.from('banners').upsert(formattedBanners).select();
-        if (!error && data && data.length > 0) {
-          return data.map(b => ({
+        const res1 = await supabase.from('banners').upsert(formattedBanners).select();
+        if (!res1.error && res1.data && res1.data.length > 0) {
+          return res1.data.map(b => ({
+            ...b,
+            imageUrl: b.image_url || b.imageUrl || ''
+          }));
+        }
+
+        const minBanners = bannerList.map((b, idx) => ({
+          id: b.id && typeof b.id === 'number' ? b.id : (idx + 1),
+          title: b.title || '',
+          image_url: b.imageUrl || b.image_url || ''
+        }));
+        const res2 = await supabase.from('banners').upsert(minBanners).select();
+        if (!res2.error && res2.data && res2.data.length > 0) {
+          return res2.data.map(b => ({
             ...b,
             imageUrl: b.image_url || b.imageUrl || ''
           }));

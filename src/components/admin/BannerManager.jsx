@@ -14,12 +14,15 @@ export default function BannerManager({ banners = [], onSaveBanners }) {
   const [uploading, setUploading] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  const initialLoaded = React.useRef(false);
+
   React.useEffect(() => {
-    if (safeBanners.length > 0) {
+    if (safeBanners.length > 0 && !initialLoaded.current) {
       setTitle(safeBanners[0].title || '');
       setSubtitle(safeBanners[0].subtitle || '');
       setImageUrl(safeBanners[0].imageUrl || safeBanners[0].image_url || '');
       setBadge(safeBanners[0].badge || '');
+      initialLoaded.current = true;
     }
   }, [banners]);
 
