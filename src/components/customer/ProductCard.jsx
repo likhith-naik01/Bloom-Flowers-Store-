@@ -29,7 +29,8 @@ export default function ProductCard({ product }) {
     if (!product.inStock) return;
     addToCart({
       ...product,
-      selectedUnit: selectedVariant.unit,
+      unit: selectedVariant.unit || product.unit || 'piece',
+      selectedUnit: selectedVariant.unit || product.unit || 'piece',
       price: selectedVariant.price
     }, 1);
     setAdded(true);

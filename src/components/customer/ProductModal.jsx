@@ -29,7 +29,8 @@ export default function ProductModal({ product, onClose }) {
     addToCart(
       {
         ...product,
-        selectedUnit: selectedVariant.unit,
+        unit: selectedVariant.unit || product.unit || 'piece',
+        selectedUnit: selectedVariant.unit || product.unit || 'piece',
         price: selectedVariant.price
       },
       qty
