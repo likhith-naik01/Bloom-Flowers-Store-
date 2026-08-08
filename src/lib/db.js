@@ -229,9 +229,7 @@ export const db = {
             inStock: p.in_stock !== false
           }));
 
-          const memoryProds = (readDb().products || []).filter(mp => !mapped.some(sp => sp.id === mp.id));
-          const combined = [...mapped, ...memoryProds];
-          const sorted = combined.sort((a, b) => Number(a.slNo || 0) - Number(b.slNo || 0));
+          const sorted = mapped.sort((a, b) => Number(a.slNo || 0) - Number(b.slNo || 0));
           
           const seen = new Set();
           let maxSl = 0;
@@ -247,7 +245,7 @@ export const db = {
             return { ...p, slNo: sl };
           });
 
-          return uniqueList.sort((a, b) => Number(a.slNo || 0) - Number(b.slNo || 0));
+          return uniqueList.sort((a, b) => Number(a.slNo || 0) - Number(a.slNo || 0));
         }
       } catch (e) {
         console.error('Supabase getProducts error:', e);
