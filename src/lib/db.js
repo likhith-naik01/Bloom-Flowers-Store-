@@ -370,9 +370,14 @@ export const db = {
           return { ...newProd, ...res4.data, id: res4.data.id || newProd.id };
         }
 
-        console.error('Supabase addProduct insert errors:', res1.error, res2.error, res3.error, res4.error);
+        const lastError = res1.error || res2.error || res3.error || res4.error;
+        if (lastError) {
+          console.error('Supabase addProduct insert failed:', lastError);
+          return { error: lastError.message || 'Supabase insert failed' };
+        }
       } catch (err) {
         console.error('Supabase addProduct exception:', err);
+        return { error: err.message };
       }
     }
 

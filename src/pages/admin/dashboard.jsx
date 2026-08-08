@@ -117,13 +117,14 @@ export default function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(productData)
       });
-      if (res.ok) {
-        await refreshData();
+      const data = await res.json();
+      if (res.ok && !data.error) {
         setShowProductForm(false);
         setEditingProduct(null);
         triggerToast('✅ Product saved successfully! It is now live on the storefront.');
+        await refreshData();
       } else {
-        alert('Failed to save product details. Please try again.');
+        alert(`Failed to save product: ${data.error || 'Database insert failed. Please check Supabase permissions.'}`);
       }
     } catch (e) {
       console.error(e);

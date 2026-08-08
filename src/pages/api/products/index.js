@@ -16,6 +16,9 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     const newProd = await db.addProduct(req.body);
+    if (newProd && newProd.error) {
+      return res.status(500).json({ error: newProd.error });
+    }
     return res.status(201).json(newProd);
   }
 
