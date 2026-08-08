@@ -205,30 +205,36 @@ export const db = {
     try { writeDb(local); } catch (e) {}
   },
 
-  // Products
   getProducts: async () => {
     if (supabase) {
-      const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
-      if (!error && data) {
-        const mapped = data.map((p, idx) => ({
-          ...p,
-          slNo: Number(p.sl_no || p.slNo || (idx + 1)),
-          nameEn: p.name || p.nameEn || '',
-          nameHi: p.nameHi || '',
-          nameKn: p.nameKn || '',
-          unit: p.unit || (Array.isArray(p.unit_variants || p.unitVariants) && (p.unit_variants || p.unitVariants)[0]?.unit) || 'piece',
-          imageUrl: p.image_url || (Array.isArray(p.images) && p.images[0] ? p.images[0] : ''),
-          images: Array.isArray(p.images) && p.images.length > 0 ? p.images : (p.image_url ? [p.image_url] : []),
-          categoryIds: p.category_ids || [],
-          unitVariants: p.unit_variants || [],
-          discountType: p.discount_type || p.discountType || (Number(p.discount_value || 0) > 0 ? 'percent' : 'none'),
-          discountValue: Number(p.discount_value || 0),
-          inStock: p.in_stock !== false
-        }));
+      try {
+        let res = await supabase.from('products').select('*').order('created_at', { ascending: false });
+        if (res.error) {
+          res = await supabase.from('products').select('*');
+        }
+        if (!res.error && res.data) {
+          const mapped = res.data.map((p, idx) => ({
+            ...p,
+            slNo: Number(p.sl_no || p.slNo || (idx + 1)),
+            nameEn: p.name || p.nameEn || '',
+            nameHi: p.nameHi || '',
+            nameKn: p.nameKn || '',
+            unit: p.unit || (Array.isArray(p.unit_variants || p.unitVariants) && (p.unit_variants || p.unitVariants)[0]?.unit) || 'piece',
+            imageUrl: p.image_url || (Array.isArray(p.images) && p.images[0] ? p.images[0] : ''),
+            images: Array.isArray(p.images) && p.images.length > 0 ? p.images : (p.image_url ? [p.image_url] : []),
+            categoryIds: p.category_ids || [],
+            unitVariants: p.unit_variants || [],
+            discountType: p.discount_type || p.discountType || (Number(p.discount_value || 0) > 0 ? 'percent' : 'none'),
+            discountValue: Number(p.discount_value || 0),
+            inStock: p.in_stock !== false
+          }));
 
-        const memoryProds = (readDb().products || []).filter(mp => !mapped.some(sp => sp.id === mp.id));
-        const combined = [...mapped, ...memoryProds];
-        return combined.sort((a, b) => Number(b.slNo || 0) - Number(a.slNo || 0));
+          const memoryProds = (readDb().products || []).filter(mp => !mapped.some(sp => sp.id === mp.id));
+          const combined = [...mapped, ...memoryProds];
+          return combined.sort((a, b) => Number(b.slNo || 0) - Number(a.slNo || 0));
+        }
+      } catch (e) {
+        console.error('Supabase getProducts error:', e);
       }
     }
 
