@@ -18,7 +18,7 @@ export default function CategoryManager({ categories = [], onAddCategory, onDele
     if (!file) return;
     setUploading(true);
     try {
-      const compressedData = await compressImage(file, 800, 800, 0.82);
+      const compressedData = await compressImage(file, 500, 500, 0.75);
       if (!compressedData) {
         setUploading(false);
         return;

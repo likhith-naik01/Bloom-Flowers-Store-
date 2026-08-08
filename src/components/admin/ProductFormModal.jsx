@@ -82,7 +82,7 @@ export default function ProductFormModal({ product, categories = [], onClose, on
         setUploadStatusText(`Compressing & Uploading photo ${i + 1} of ${files.length}...`);
 
         try {
-          const compressedData = await compressImage(file, 800, 800, 0.82);
+          const compressedData = await compressImage(file, 600, 600, 0.78);
           if (!compressedData) continue;
 
           const res = await fetch('/api/upload', {
