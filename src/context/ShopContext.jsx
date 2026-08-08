@@ -10,7 +10,7 @@ export function ShopProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [newOrderAlert, setNewOrderAlert] = useState(null);
   
-  const knownOrderIdsRef = useRef(new Set());
+  const notifiedOrderIdsRef = useRef(new Set());
   const initialFetchDone = useRef(false);
 
   // Web Audio Synthesized Chime Sound (Zero external file dependencies)
@@ -74,24 +74,25 @@ export function ShopProvider({ children }) {
         const fetchedOrders = await ordRes.json();
         setOrders(fetchedOrders);
 
-        // Check for newly created orders after initial load
-        if (initialFetchDone.current) {
-          const freshNewOrders = fetchedOrders.filter(
-            (o) => o.status === 'new' && !knownOrderIdsRef.current.has(o.id)
+        if (!initialFetchDone.current) {
+          // On first load, record all existing order IDs as already notified so they don't chime
+          fetchedOrders.forEach((o) => notifiedOrderIdsRef.current.add(o.id));
+          initialFetchDone.current = true;
+        } else {
+          // Find newly arrived orders that have NEVER been chimed for
+          const unnotifiedNewOrders = fetchedOrders.filter(
+            (o) => o.status === 'new' && !notifiedOrderIdsRef.current.has(o.id)
           );
 
-          if (freshNewOrders.length > 0) {
-            const latestNew = freshNewOrders[0];
-            setNewOrderAlert(latestNew);
-            playOrderChime();
-            triggerBrowserNotification(latestNew);
+          if (unnotifiedNewOrders.length > 0) {
+            unnotifiedNewOrders.forEach((newOrd) => {
+              notifiedOrderIdsRef.current.add(newOrd.id); // Mark immediately as notified
+              setNewOrderAlert(newOrd);
+              playOrderChime(); // Single 1-time chime sound!
+              triggerBrowserNotification(newOrd);
+            });
           }
         }
-
-        // Update known order IDs set
-        const updatedIds = new Set(fetchedOrders.map((o) => o.id));
-        knownOrderIdsRef.current = updatedIds;
-        initialFetchDone.current = true;
       }
     } catch (e) {
       console.error('Failed to fetch shop data:', e);
