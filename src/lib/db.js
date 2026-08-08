@@ -10,6 +10,9 @@ let memoryCache = null;
 let lastMtime = 0;
 
 function readDb() {
+  if (global.__MEMORY_CACHE__) {
+    return global.__MEMORY_CACHE__;
+  }
   try {
     if (!fs.existsSync(DB_PATH)) {
       const initialData = {
@@ -22,9 +25,9 @@ function readDb() {
           { username: 'Likhith', password: 'Likhith@0501' }
         ]
       };
-      fs.writeFileSync(DB_PATH, JSON.stringify(initialData, null, 2), 'utf-8');
       memoryCache = initialData;
-      lastMtime = fs.statSync(DB_PATH).mtimeMs;
+      global.__MEMORY_CACHE__ = initialData;
+      try { fs.writeFileSync(DB_PATH, JSON.stringify(initialData, null, 2), 'utf-8'); } catch(e){}
       return initialData;
     }
 
@@ -35,12 +38,13 @@ function readDb() {
 
     const fileContent = fs.readFileSync(DB_PATH, 'utf-8');
     memoryCache = JSON.parse(fileContent);
+    global.__MEMORY_CACHE__ = memoryCache;
     lastMtime = stat.mtimeMs;
     return memoryCache;
   } catch (error) {
     console.error('Error reading DB file:', error);
     if (memoryCache) return memoryCache;
-    return {
+    const initialData = {
       categories: INITIAL_CATEGORIES,
       products: INITIAL_PRODUCTS,
       banners: INITIAL_BANNERS,
@@ -50,24 +54,25 @@ function readDb() {
         { username: 'Likhith', password: 'Likhith@0501' }
       ]
     };
+    memoryCache = initialData;
+    global.__MEMORY_CACHE__ = initialData;
+    return initialData;
   }
 }
 
 function writeDb(data) {
+  memoryCache = data;
+  global.__MEMORY_CACHE__ = data;
   try {
-    memoryCache = data;
     const jsonString = JSON.stringify(data, null, 2);
     fs.writeFileSync(TMP_PATH, jsonString, 'utf-8');
     fs.renameSync(TMP_PATH, DB_PATH);
     lastMtime = fs.statSync(DB_PATH).mtimeMs;
   } catch (error) {
-    console.error('Error writing DB file:', error);
     try {
       fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), 'utf-8');
       lastMtime = fs.statSync(DB_PATH).mtimeMs;
-    } catch (e) {
-      console.error('Fallback write error:', e);
-    }
+    } catch (e) {}
   }
 }
 
@@ -220,7 +225,10 @@ export const db = {
           discountValue: Number(p.discount_value || 0),
           inStock: p.in_stock !== false
         }));
-        return mapped.sort((a, b) => Number(b.slNo || 0) - Number(a.slNo || 0));
+
+        const memoryProds = (readDb().products || []).filter(mp => !mapped.some(sp => sp.id === mp.id));
+        const combined = [...mapped, ...memoryProds];
+        return combined.sort((a, b) => Number(b.slNo || 0) - Number(a.slNo || 0));
       }
 
       // Seed initial dummy products into Supabase if empty
