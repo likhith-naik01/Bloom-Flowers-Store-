@@ -65,15 +65,22 @@ export default function ProductFormModal({ product, categories = [], onClose, on
 
   const [saving, setSaving] = useState(false);
 
-  // Direct File Upload Handler
+  const [uploadStatusText, setUploadStatusText] = useState('');
+
+  // Direct File Upload Handler (Supports Multi-Photo Selection)
   const handleFileUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
 
     setUploading(true);
+    const newUploadedUrls = [];
+
     try {
-      for (const file of files) {
-        await new Promise((resolve) => {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        setUploadStatusText(`Uploading photo ${i + 1} of ${files.length}...`);
+
+        const uploadedUrl = await new Promise((resolve) => {
           const reader = new FileReader();
           reader.onloadend = async () => {
             const base64Data = reader.result;
@@ -85,20 +92,34 @@ export default function ProductFormModal({ product, categories = [], onClose, on
               });
               const data = await res.json();
               if (res.ok && data.url) {
-                setImages((prev) => [...prev, data.url]);
+                resolve(data.url);
+              } else {
+                // Fallback to base64 data if upload endpoint failed
+                resolve(base64Data);
               }
             } catch (err) {
-              console.error(err);
+              console.error('File upload fetch error:', err);
+              // Fallback to base64 data URL
+              resolve(base64Data);
             }
-            resolve();
           };
           reader.readAsDataURL(file);
         });
+
+        if (uploadedUrl) {
+          newUploadedUrls.push(uploadedUrl);
+        }
+      }
+
+      if (newUploadedUrls.length > 0) {
+        setImages((prev) => [...prev, ...newUploadedUrls]);
       }
     } catch (err) {
-      console.error(err);
+      console.error('Upload handler error:', err);
     } finally {
       setUploading(false);
+      setUploadStatusText('');
+      e.target.value = ''; // Reset file input so user can pick again
     }
   };
 

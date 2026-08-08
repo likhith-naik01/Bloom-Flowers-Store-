@@ -76,7 +76,25 @@ export const db = {
   getCategories: async () => {
     if (supabase) {
       const { data, error } = await supabase.from('categories').select('*').order('created_at', { ascending: true });
-      if (!error && data) return data;
+      if (!error && data && data.length > 0) return data;
+
+      // Seed initial dummy categories into Supabase if empty
+      if (!error && data && data.length === 0) {
+        try {
+          const insertPayload = INITIAL_CATEGORIES.map(c => ({
+            id: c.id,
+            name: c.nameEn,
+            slug: c.nameEn.toLowerCase().replace(/\s+/g, '-'),
+            image: c.image || '',
+            description: c.description || ''
+          }));
+          await supabase.from('categories').insert(insertPayload);
+          const { data: fresh } = await supabase.from('categories').select('*').order('created_at', { ascending: true });
+          if (fresh && fresh.length > 0) return fresh;
+        } catch (e) {
+          console.error('Category seeding error:', e);
+        }
+      }
     }
     return readDb().categories || [];
   },
@@ -121,20 +139,59 @@ export const db = {
   getProducts: async () => {
     if (supabase) {
       const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
-      if (!error && data) {
+      if (!error && data && data.length > 0) {
         return data.map(p => ({
           ...p,
+          nameEn: p.name || p.nameEn || '',
+          nameHi: p.nameHi || '',
+          nameKn: p.nameKn || '',
           imageUrl: p.image_url || (Array.isArray(p.images) && p.images[0] ? p.images[0] : ''),
+          images: Array.isArray(p.images) && p.images.length > 0 ? p.images : (p.image_url ? [p.image_url] : []),
           categoryIds: p.category_ids || [],
           unitVariants: p.unit_variants || [],
           discountValue: Number(p.discount_value || 0),
           inStock: p.in_stock !== false
         }));
       }
+
+      // Seed initial dummy products into Supabase if empty
+      if (!error && data && data.length === 0) {
+        try {
+          const insertPayload = INITIAL_PRODUCTS.map(p => ({
+            id: p.id,
+            name: p.nameEn,
+            price: Number(p.price),
+            discount_value: Number(p.discountValue || 0),
+            image_url: p.imageUrl,
+            images: Array.isArray(p.images) ? p.images : [p.imageUrl],
+            category_ids: Array.isArray(p.categoryIds) ? p.categoryIds : [p.categoryId],
+            unit_variants: p.unitVariants || [],
+            in_stock: p.inStock !== false,
+            description: p.description || ''
+          }));
+          await supabase.from('products').insert(insertPayload);
+          const { data: fresh } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+          if (fresh && fresh.length > 0) {
+            return fresh.map(p => ({
+              ...p,
+              nameEn: p.name || '',
+              imageUrl: p.image_url || '',
+              images: p.images || [p.image_url],
+              categoryIds: p.category_ids || [],
+              unitVariants: p.unit_variants || [],
+              discountValue: Number(p.discount_value || 0),
+              inStock: p.in_stock !== false
+            }));
+          }
+        } catch (e) {
+          console.error('Product seeding error:', e);
+        }
+      }
     }
     const prods = readDb().products || [];
     return prods.map(p => ({
       ...p,
+      nameEn: p.nameEn || p.name || '',
       categoryIds: Array.isArray(p.categoryIds) ? p.categoryIds : (p.categoryId ? [p.categoryId] : []),
       images: Array.isArray(p.images) && p.images.length > 0 ? p.images : (p.imageUrl ? [p.imageUrl] : []),
       imageUrl: p.imageUrl || (Array.isArray(p.images) && p.images[0] ? p.images[0] : ''),
@@ -147,7 +204,9 @@ export const db = {
       if (!error && data) {
         return {
           ...data,
+          nameEn: data.name || data.nameEn || '',
           imageUrl: data.image_url || (Array.isArray(data.images) && data.images[0] ? data.images[0] : ''),
+          images: Array.isArray(data.images) && data.images.length > 0 ? data.images : (data.image_url ? [data.image_url] : []),
           categoryIds: data.category_ids || [],
           unitVariants: data.unit_variants || [],
           discountValue: Number(data.discount_value || 0),
@@ -161,9 +220,13 @@ export const db = {
   addProduct: async (prod) => {
     const imagesList = Array.isArray(prod.images) && prod.images.length > 0 ? prod.images : (prod.imageUrl ? [prod.imageUrl] : []);
     const categoryIdsList = Array.isArray(prod.categoryIds) && prod.categoryIds.length > 0 ? prod.categoryIds : (prod.categoryId ? [prod.categoryId] : []);
+    const productName = prod.nameEn || prod.name || 'Flower Item';
+
     const newProd = {
       ...prod,
       id: prod.id || `prod_${Date.now()}`,
+      name: productName,
+      nameEn: productName,
       categoryIds: categoryIdsList,
       images: imagesList,
       imageUrl: imagesList[0] || '',
@@ -176,7 +239,7 @@ export const db = {
     if (supabase) {
       const { data, error } = await supabase.from('products').insert([{
         id: newProd.id,
-        name: newProd.name,
+        name: productName,
         price: newProd.price,
         discount_value: newProd.discountValue,
         image_url: newProd.imageUrl,
@@ -186,6 +249,9 @@ export const db = {
         in_stock: newProd.inStock,
         description: newProd.description || ''
       }]).select().single();
+      if (error) {
+        console.error('Supabase addProduct error:', error);
+      }
       if (!error && data) return newProd;
     }
 
@@ -196,37 +262,48 @@ export const db = {
     return newProd;
   },
   updateProduct: async (id, updated) => {
+    const imagesList = Array.isArray(updated.images) && updated.images.length > 0
+      ? updated.images
+      : (updated.imageUrl ? [updated.imageUrl] : []);
+    const categoryIdsList = Array.isArray(updated.categoryIds) && updated.categoryIds.length > 0
+      ? updated.categoryIds
+      : (updated.categoryId ? [updated.categoryId] : []);
+    const productName = updated.nameEn || updated.name;
+
     if (supabase) {
       const payload = {};
-      if (updated.name !== undefined) payload.name = updated.name;
+      if (productName !== undefined) payload.name = productName;
       if (updated.price !== undefined) payload.price = Number(updated.price);
       if (updated.discountValue !== undefined) payload.discount_value = Number(updated.discountValue);
-      if (updated.imageUrl !== undefined) payload.image_url = updated.imageUrl;
-      if (updated.images !== undefined) payload.images = updated.images;
-      if (updated.categoryIds !== undefined) payload.category_ids = updated.categoryIds;
+      if (imagesList.length > 0) {
+        payload.images = imagesList;
+        payload.image_url = imagesList[0];
+      }
+      if (categoryIdsList.length > 0) payload.category_ids = categoryIdsList;
       if (updated.unitVariants !== undefined) payload.unit_variants = updated.unitVariants;
       if (updated.inStock !== undefined) payload.in_stock = updated.inStock;
       if (updated.description !== undefined) payload.description = updated.description;
 
       const { data, error } = await supabase.from('products').update(payload).eq('id', id).select().single();
+      if (error) {
+        console.error('Supabase updateProduct error:', error);
+      }
       if (!error && data) return db.getProductById(id);
     }
     const local = readDb();
     local.products = (local.products || []).map(p => {
       if (p.id === id) {
-        const imagesList = Array.isArray(updated.images) && updated.images.length > 0
-          ? updated.images
-          : (updated.imageUrl ? [updated.imageUrl] : (Array.isArray(p.images) ? p.images : [p.imageUrl]));
-        const categoryIdsList = Array.isArray(updated.categoryIds) && updated.categoryIds.length > 0
-          ? updated.categoryIds
-          : (updated.categoryId ? [updated.categoryId] : (Array.isArray(p.categoryIds) ? p.categoryIds : [p.categoryId]));
+        const imgs = imagesList.length > 0 ? imagesList : (Array.isArray(p.images) ? p.images : [p.imageUrl]);
+        const cats = categoryIdsList.length > 0 ? categoryIdsList : (Array.isArray(p.categoryIds) ? p.categoryIds : [p.categoryId]);
 
         return {
           ...p,
           ...updated,
-          categoryIds: categoryIdsList,
-          images: imagesList,
-          imageUrl: imagesList[0] || p.imageUrl || '',
+          name: productName || p.name,
+          nameEn: productName || p.nameEn || p.name,
+          categoryIds: cats,
+          images: imgs,
+          imageUrl: imgs[0] || p.imageUrl || '',
           price: Number(updated.price !== undefined ? updated.price : p.price),
           discountValue: Number(updated.discountValue !== undefined ? updated.discountValue : p.discountValue),
           unitVariants: Array.isArray(updated.unitVariants) ? updated.unitVariants : p.unitVariants || []
