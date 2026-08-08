@@ -479,7 +479,9 @@ export const db = {
     }));
   },
   updateBanners: async (banners) => {
-    const formattedBanners = banners.map(b => ({
+    const bannerList = Array.isArray(banners) ? banners : [banners];
+    const formattedBanners = bannerList.map((b, idx) => ({
+      id: b.id && typeof b.id === 'number' ? b.id : (idx + 1),
       title: b.title || '',
       subtitle: b.subtitle || '',
       badge: b.badge || '',
@@ -488,22 +490,22 @@ export const db = {
     }));
 
     if (supabase) {
-      await supabase.from('banners').delete().neq('id', -1);
-      const { data, error } = await supabase.from('banners').insert(formattedBanners).select();
-      if (error) {
-        console.error('Supabase updateBanners error:', error);
-      }
-      if (!error && data) {
-        return data.map(b => ({
-          ...b,
-          imageUrl: b.image_url || b.imageUrl || ''
-        }));
+      try {
+        const { data, error } = await supabase.from('banners').upsert(formattedBanners).select();
+        if (!error && data && data.length > 0) {
+          return data.map(b => ({
+            ...b,
+            imageUrl: b.image_url || b.imageUrl || ''
+          }));
+        }
+      } catch (e) {
+        console.error('Supabase updateBanners error:', e);
       }
     }
     const local = readDb();
-    local.banners = banners.map(b => ({
+    local.banners = formattedBanners.map(b => ({
       ...b,
-      imageUrl: b.imageUrl || b.image_url || ''
+      imageUrl: b.image_url || b.imageUrl || ''
     }));
     writeDb(local);
     return local.banners;

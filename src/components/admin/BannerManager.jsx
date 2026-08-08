@@ -4,19 +4,22 @@ import { Save, Image as ImageIcon, Upload, CheckCircle2 } from 'lucide-react';
 import { compressImage } from '../../lib/imageCompressor';
 
 export default function BannerManager({ banners = [], onSaveBanners }) {
-  const [title, setTitle] = useState(banners[0]?.title || '');
-  const [subtitle, setSubtitle] = useState(banners[0]?.subtitle || '');
-  const [imageUrl, setImageUrl] = useState(banners[0]?.imageUrl || banners[0]?.image_url || '');
-  const [badge, setBadge] = useState(banners[0]?.badge || '');
+  const safeBanners = Array.isArray(banners) ? banners : [];
+  const currentBanner = safeBanners[0] || {};
+
+  const [title, setTitle] = useState(currentBanner.title || '');
+  const [subtitle, setSubtitle] = useState(currentBanner.subtitle || '');
+  const [imageUrl, setImageUrl] = useState(currentBanner.imageUrl || currentBanner.image_url || '');
+  const [badge, setBadge] = useState(currentBanner.badge || '');
   const [uploading, setUploading] = useState(false);
   const [saved, setSaved] = useState(false);
 
   React.useEffect(() => {
-    if (banners && banners.length > 0) {
-      setTitle(banners[0].title || '');
-      setSubtitle(banners[0].subtitle || '');
-      setImageUrl(banners[0].imageUrl || banners[0].image_url || '');
-      setBadge(banners[0].badge || '');
+    if (safeBanners.length > 0) {
+      setTitle(safeBanners[0].title || '');
+      setSubtitle(safeBanners[0].subtitle || '');
+      setImageUrl(safeBanners[0].imageUrl || safeBanners[0].image_url || '');
+      setBadge(safeBanners[0].badge || '');
     }
   }, [banners]);
 
