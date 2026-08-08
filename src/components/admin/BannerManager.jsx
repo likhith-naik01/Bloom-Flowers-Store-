@@ -5,10 +5,19 @@ import { Save, Image as ImageIcon, Upload, CheckCircle2 } from 'lucide-react';
 export default function BannerManager({ banners = [], onSaveBanners }) {
   const [title, setTitle] = useState(banners[0]?.title || '');
   const [subtitle, setSubtitle] = useState(banners[0]?.subtitle || '');
-  const [imageUrl, setImageUrl] = useState(banners[0]?.imageUrl || '');
+  const [imageUrl, setImageUrl] = useState(banners[0]?.imageUrl || banners[0]?.image_url || '');
   const [badge, setBadge] = useState(banners[0]?.badge || '');
   const [uploading, setUploading] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  React.useEffect(() => {
+    if (banners && banners.length > 0) {
+      setTitle(banners[0].title || '');
+      setSubtitle(banners[0].subtitle || '');
+      setImageUrl(banners[0].imageUrl || banners[0].image_url || '');
+      setBadge(banners[0].badge || '');
+    }
+  }, [banners]);
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];

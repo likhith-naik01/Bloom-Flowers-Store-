@@ -19,19 +19,22 @@ export default function CategoryCardGrid({ categories = [] }) {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        {categories.map((cat) => (
-          <Link
-            key={cat.id}
-            href={`/category/${cat.id}`}
-            className="group relative rounded-xl overflow-hidden glass-panel border border-white/10 hover:border-rose-500/50 transition-all p-2.5 flex flex-col justify-between h-28"
-          >
-            <Image
-              src={cat.imageUrl}
-              alt={cat.nameEn}
-              fill
-              className="object-cover opacity-40 group-hover:opacity-50 group-hover:scale-110 transition-all duration-500"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-transparent z-10" />
+        {categories.map((cat) => {
+          const catImg = cat.image || cat.imageUrl || '';
+          return (
+            <Link
+              key={cat.id}
+              href={`/category/${cat.id}`}
+              className="group relative rounded-xl overflow-hidden glass-panel border border-white/10 hover:border-rose-500/50 transition-all p-2.5 flex flex-col justify-between h-28"
+            >
+              {catImg && (
+                <img
+                  src={catImg}
+                  alt={cat.nameEn || cat.name}
+                  className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-50 group-hover:scale-110 transition-all duration-500"
+                />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-transparent z-10" />
 
             <div className="relative z-20 flex justify-end">
               <span className="w-6 h-6 rounded-full bg-rose-500/20 text-rose-300 flex items-center justify-center group-hover:bg-rose-500 group-hover:text-white transition-colors">

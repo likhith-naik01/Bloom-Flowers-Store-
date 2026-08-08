@@ -54,13 +54,14 @@ export default function CategoryDetail() {
           </Link>
 
           {/* Banner Header */}
-          <div className="relative w-full h-36 rounded-2xl overflow-hidden mb-4 border border-white/10 shadow-xl">
-            <Image
-              src={category.imageUrl}
-              alt={category.nameEn}
-              fill
-              className="object-cover"
-            />
+          <div className="relative w-full h-36 rounded-2xl overflow-hidden mb-4 border border-white/10 shadow-xl bg-slate-900">
+            {(category.image || category.imageUrl) && (
+              <img
+                src={category.image || category.imageUrl}
+                alt={category.nameEn || category.name}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent flex flex-col justify-end p-4">
               <h1 className="text-xl font-extrabold text-white">{category.nameEn}</h1>
               {(category.nameHi || category.nameKn) && (

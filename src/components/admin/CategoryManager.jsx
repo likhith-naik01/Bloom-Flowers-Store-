@@ -44,7 +44,14 @@ export default function CategoryManager({ categories = [], onAddCategory, onDele
       alert('Please enter English Category Name and upload/provide an image.');
       return;
     }
-    await onAddCategory({ nameEn, nameHi, nameKn, imageUrl, description });
+    await onAddCategory({
+      nameEn,
+      nameHi,
+      nameKn,
+      image: imageUrl,
+      imageUrl: imageUrl,
+      description
+    });
     setNameEn('');
     setNameHi('');
     setNameKn('');
@@ -161,29 +168,36 @@ export default function CategoryManager({ categories = [], onAddCategory, onDele
       )}
 
       <div className="space-y-2">
-        {categories.map((c) => (
-          <div key={c.id} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/60 border border-white/5">
-            <div className="flex items-center gap-3">
-              <div className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-white/10">
-                <Image src={c.imageUrl} alt={c.nameEn} fill className="object-cover" />
+        {categories.map((c) => {
+          const catImg = c.image || c.imageUrl || '';
+          return (
+            <div key={c.id} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/60 border border-white/5">
+              <div className="flex items-center gap-3">
+                <div className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-white/10 bg-slate-800">
+                  {catImg ? (
+                    <img src={catImg} alt={c.nameEn || c.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-xs text-slate-500">🌸</div>
+                  )}
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-white">{c.nameEn || c.name}</h4>
+                  {(c.nameHi || c.nameKn) && (
+                    <span className="text-[10px] text-rose-300 font-medium block">
+                      {[c.nameHi, c.nameKn].filter(Boolean).join(' • ')}
+                    </span>
+                  )}
+                </div>
               </div>
-              <div>
-                <h4 className="text-xs font-bold text-white">{c.nameEn}</h4>
-                {(c.nameHi || c.nameKn) && (
-                  <span className="text-[10px] text-rose-300 font-medium block">
-                    {[c.nameHi, c.nameKn].filter(Boolean).join(' • ')}
-                  </span>
-                )}
-              </div>
+              <button
+                onClick={() => onDeleteCategory(c.id)}
+                className="p-1.5 text-slate-400 hover:text-red-400 transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
-            <button
-              onClick={() => onDeleteCategory(c.id)}
-              className="p-1.5 text-slate-400 hover:text-red-400 transition-colors"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

@@ -9,14 +9,15 @@ export default function ProductCard({ product }) {
   const [added, setAdded] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
+  const rawImg = product.imageUrl || product.image_url || product.image || '';
   const imagesList = Array.isArray(product.images) && product.images.length > 0
     ? product.images
-    : (product.imageUrl ? [product.imageUrl] : []);
-  const displayImage = imagesList[0] || '';
+    : (rawImg ? [rawImg] : []);
+  const displayImage = imagesList[0] || rawImg || '';
 
   const variants = Array.isArray(product.unitVariants) && product.unitVariants.length > 0
     ? product.unitVariants
-    : [{ unit: product.unit, price: product.price }];
+    : [{ unit: product.unit || 'bunch', price: product.price || 0 }];
 
   const [selectedVariant, setSelectedVariant] = useState(variants[0]);
 
@@ -39,18 +40,21 @@ export default function ProductCard({ product }) {
     <>
       <div
         onClick={() => setShowModal(true)}
-        className="group relative rounded-2xl glass-panel border border-white/10 hover:border-rose-500/40 transition-all p-3 flex flex-col justify-between cursor-pointer overflow-hidden"
+        className="group relative rounded-2xl glass-panel border border-white/10 hover:border-rose-500/40 transition-all p-3 flex flex-col justify-between cursor-pointer overflow-hidden bg-slate-900/60"
       >
         {/* Top Badges */}
-        <div className="relative w-full h-32 rounded-xl overflow-hidden mb-2.5">
-          <Image
-            src={displayImage}
-            alt={product.nameEn}
-            fill
-            className={`object-cover group-hover:scale-105 transition-transform duration-500 ${
-              !product.inStock ? 'grayscale opacity-60' : ''
-            }`}
-          />
+        <div className="relative w-full h-32 rounded-xl overflow-hidden mb-2.5 bg-slate-800">
+          {displayImage ? (
+            <img
+              src={displayImage}
+              alt={product.nameEn || product.name || 'Product'}
+              className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${
+                !product.inStock ? 'grayscale opacity-60' : ''
+              }`}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-slate-500 text-2xl">🌸</div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
 
           {/* Discount Badge */}

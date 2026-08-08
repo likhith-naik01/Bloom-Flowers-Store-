@@ -52,13 +52,16 @@ export default function ProductModal({ product, onClose }) {
         </button>
 
         {/* Multi-Photo Carousel */}
-        <div className="relative w-full h-56 rounded-2xl overflow-hidden mb-3 group">
-          <Image
-            src={imagesList[activeImgIndex] || displayImage}
-            alt={product.nameEn}
-            fill
-            className={`object-cover ${!product.inStock ? 'grayscale opacity-60' : ''}`}
-          />
+        <div className="relative w-full h-56 rounded-2xl overflow-hidden mb-3 group bg-slate-900">
+          {imagesList[activeImgIndex] ? (
+            <img
+              src={imagesList[activeImgIndex]}
+              alt={product.nameEn || product.name || 'Photo'}
+              className={`w-full h-full object-cover ${!product.inStock ? 'grayscale opacity-60' : ''}`}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-slate-500 text-3xl">🌸</div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
 
           {/* Navigation Arrows for Multiple Photos */}
@@ -95,11 +98,11 @@ export default function ProductModal({ product, onClose }) {
               <button
                 key={i}
                 onClick={() => setActiveImgIndex(i)}
-                className={`relative w-12 h-12 rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ${
+                className={`relative w-12 h-12 rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 bg-slate-900 ${
                   activeImgIndex === i ? 'border-rose-500 scale-105' : 'border-transparent opacity-60'
                 }`}
               >
-                <Image src={img} alt={`Thumb ${i}`} fill className="object-cover" />
+                <img src={img} alt={`Thumb ${i}`} className="w-full h-full object-cover" />
               </button>
             ))}
           </div>
