@@ -4,7 +4,8 @@ export const INITIAL_CATEGORIES = [
     nameEn: "💕 Anniversary & Romance",
     nameHi: "Salgirah",
     nameKn: "Varshikotsava",
-    imageUrl: "C:\\Users\\chait\\.gemini\\antigravity\\brain\\bd4199c6-e579-446a-bf03-7c398bed4f81\\red_roses_gulabi_1786136783051.jpg",
+    imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80",
     description: "Red rose surprise boxes, romantic lily hampers & luxury arrangements."
   },
   {
@@ -12,7 +13,8 @@ export const INITIAL_CATEGORIES = [
     nameEn: "💍 Wedding & Varmala",
     nameHi: "Shadi Mala & Gajra",
     nameKn: "Maduve Haara & Gajra",
-    imageUrl: "C:\\Users\\chait\\.gemini\\antigravity\\brain\\bd4199c6-e579-446a-bf03-7c398bed4f81\\garland_haras_1786136935550.jpg",
+    imageUrl: "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?auto=format&fit=crop&w=800&q=80",
     description: "Grand Varmalas, Bridal Gajras (Mallige strings), Groom garlands & mandap flowers."
   },
   {
@@ -20,7 +22,8 @@ export const INITIAL_CATEGORIES = [
     nameEn: "🎂 Birthday & Celebration",
     nameHi: "Janamdin Guldasta",
     nameKn: "Huttu Habba Bouquet",
-    imageUrl: "https://images.unsplash.com/photo-1508610048659-a06b669e3321?auto=format&fit=crop&w=600&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1508610048659-a06b669e3321?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1508610048659-a06b669e3321?auto=format&fit=crop&w=800&q=80",
     description: "Festive flower hampers, mixed flower baskets, rose bouquets & gifts."
   },
   {
@@ -28,7 +31,8 @@ export const INITIAL_CATEGORIES = [
     nameEn: "💐 Bouquets Section",
     nameHi: "Guldasta Category",
     nameKn: "Bouquet Section",
-    imageUrl: "C:\\Users\\chait\\.gemini\\antigravity\\brain\\bd4199c6-e579-446a-bf03-7c398bed4f81\\red_roses_gulabi_1786136783051.jpg",
+    imageUrl: "https://images.unsplash.com/photo-1548695607-9c73430ba065?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1548695607-9c73430ba065?auto=format&fit=crop&w=800&q=80",
     description: "All types of bouquets: Rose bouquets, Lily bouquets, Mixed flower bouquets & Custom hampers."
   },
   {
@@ -36,7 +40,8 @@ export const INITIAL_CATEGORIES = [
     nameEn: "🌸 Loose Pooja Flowers",
     nameHi: "Pooja Ke Phool",
     nameKn: "Pooje Huvu",
-    imageUrl: "C:\\Users\\chait\\.gemini\\antigravity\\brain\\bd4199c6-e579-446a-bf03-7c398bed4f81\\yellow_sevanthige_1786136800616.jpg",
+    imageUrl: "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=800&q=80",
     description: "Gulabi (Rose), Sevanthige (Chrysanthemum), Mallige (Jasmine), Chendu Hoovu (Marigold) & Kamala (Lotus)."
   },
   {
@@ -44,7 +49,8 @@ export const INITIAL_CATEGORIES = [
     nameEn: "🌿 Pooja Leaves",
     nameHi: "Pooja Patte",
     nameKn: "Pooje Yele",
-    imageUrl: "C:\\Users\\chait\\.gemini\\antigravity\\brain\\bd4199c6-e579-446a-bf03-7c398bed4f81\\bel_patra_plain_1786137069495.jpg",
+    imageUrl: "https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?auto=format&fit=crop&w=800&q=80",
     description: "Tulasi sprigs, Bilva Patra / Bel Patra (21 & 108 sprigs) & Durva / Garike grass."
   },
   {
@@ -52,7 +58,8 @@ export const INITIAL_CATEGORIES = [
     nameEn: "🌺 Garlands & Maalas",
     nameHi: "Phoolon Ki Mala",
     nameKn: "Huvina Haara",
-    imageUrl: "C:\\Users\\chait\\.gemini\\antigravity\\brain\\bd4199c6-e579-446a-bf03-7c398bed4f81\\garland_haras_1786136935550.jpg",
+    imageUrl: "https://images.unsplash.com/photo-1596073413225-300dd1d416c2?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1596073413225-300dd1d416c2?auto=format&fit=crop&w=800&q=80",
     description: "Traditional deity garlands, mixed flower maalas, and custom length garlands."
   },
   {
@@ -60,7 +67,8 @@ export const INITIAL_CATEGORIES = [
     nameEn: "🪔 Pooja Samagri",
     nameHi: "Pooja Samagri",
     nameKn: "Pooje Saamagree",
-    imageUrl: "C:\\Users\\chait\\.gemini\\antigravity\\brain\\bd4199c6-e579-446a-bf03-7c398bed4f81\\ganesh_pooja_kit_1786136981367.jpg",
+    imageUrl: "https://images.unsplash.com/photo-1606744888344-493238951221?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1606744888344-493238951221?auto=format&fit=crop&w=800&q=80",
     description: "Agarbathi, Dhoop, Camphor, Kumkum, Turmeric, Chandan, Wicks & Lamp Oil."
   },
   {
@@ -68,7 +76,8 @@ export const INITIAL_CATEGORIES = [
     nameEn: "🎁 Complete Pooja Kits",
     nameHi: "Pooja Kit",
     nameKn: "Pooje Pack",
-    imageUrl: "C:\\Users\\chait\\.gemini\\antigravity\\brain\\bd4199c6-e579-446a-bf03-7c398bed4f81\\ganesh_pooja_kit_1786136981367.jpg",
+    imageUrl: "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?auto=format&fit=crop&w=800&q=80",
     description: "All-in-one Ganesh Pooja Kit, Varalakshmi Kit & Shivaratri Kits."
   }
 ];
@@ -93,11 +102,11 @@ export const INITIAL_PRODUCTS = [
     discountValue: 10,
     inStock: true,
     images: [
-      "C:\\Users\\chait\\.gemini\\antigravity\\brain\\bd4199c6-e579-446a-bf03-7c398bed4f81\\red_roses_gulabi_1786136783051.jpg",
-      "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80",
-      "https://images.unsplash.com/photo-1548695607-9c73430ba065?auto=format&fit=crop&w=600&q=80"
+      "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1548695607-9c73430ba065?auto=format&fit=crop&w=800&q=80"
     ],
-    description: "Photo 1: Fresh Rose Setup. Photo 2: Plain Background Isolated Rose. Photo 3: Pack Stems.",
+    imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80",
+    description: "Fresh fragrant red rose petals and stems for daily worship and celebration.",
     tags: ["Pooja Flowers", "Rose"]
   },
 
@@ -120,11 +129,11 @@ export const INITIAL_PRODUCTS = [
     discountValue: 20,
     inStock: true,
     images: [
-      "C:\\Users\\chait\\.gemini\\antigravity\\brain\\bd4199c6-e579-446a-bf03-7c398bed4f81\\yellow_sevanthige_1786136800616.jpg",
-      "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?auto=format&fit=crop&w=600&q=80",
-      "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=600&q=80"
+      "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?auto=format&fit=crop&w=800&q=80"
     ],
-    description: "Photo 1: Worship Basket. Photo 2: Plain Isolated Yellow Blooms. Photo 3: Weighed Pack.",
+    imageUrl: "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=800&q=80",
+    description: "Bright yellow Sevanthige blooms ideal for deity decoration and garlands.",
     tags: ["Pooja Flowers", "Sevanthige"]
   },
 
@@ -147,11 +156,10 @@ export const INITIAL_PRODUCTS = [
     discountValue: 15,
     inStock: true,
     images: [
-      "C:\\Users\\chait\\.gemini\\antigravity\\brain\\bd4199c6-e579-446a-bf03-7c398bed4f81\\jasmine_mallige_1786136820568.jpg",
-      "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=600&q=80",
-      "https://images.unsplash.com/photo-1596073413225-300dd1d416c2?auto=format&fit=crop&w=600&q=80"
+      "https://images.unsplash.com/photo-1596073413225-300dd1d416c2?auto=format&fit=crop&w=800&q=80"
     ],
-    description: "Photo 1: Banana Leaf Setup. Photo 2: Plain Isolated String. Photo 3: Loose Buds Pack.",
+    imageUrl: "https://images.unsplash.com/photo-1596073413225-300dd1d416c2?auto=format&fit=crop&w=800&q=80",
+    description: "Authentic fresh Jasmine buds string for hair and pooja offerings.",
     tags: ["Pooja Flowers", "Jasmine"]
   },
 
@@ -173,11 +181,10 @@ export const INITIAL_PRODUCTS = [
     discountValue: 0,
     inStock: true,
     images: [
-      "C:\\Users\\chait\\.gemini\\antigravity\\brain\\bd4199c6-e579-446a-bf03-7c398bed4f81\\marigold_chendu_1786136840881.jpg",
-      "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?auto=format&fit=crop&w=600&q=80",
-      "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=600&q=80"
+      "https://images.unsplash.com/photo-1567684014761-b65e2e59b9eb?auto=format&fit=crop&w=800&q=80"
     ],
-    description: "Photo 1: Temple Thali. Photo 2: Plain Isolated Marigold. Photo 3: Weighed Bag.",
+    imageUrl: "https://images.unsplash.com/photo-1567684014761-b65e2e59b9eb?auto=format&fit=crop&w=800&q=80",
+    description: "Vibrant orange and yellow marigold flowers for door torans and altar decoration.",
     tags: ["Pooja Flowers", "Marigold"]
   },
 
@@ -198,11 +205,10 @@ export const INITIAL_PRODUCTS = [
     discountValue: 0,
     inStock: true,
     images: [
-      "C:\\Users\\chait\\.gemini\\antigravity\\brain\\bd4199c6-e579-446a-bf03-7c398bed4f81\\lotus_kamala_1786136863531.jpg",
-      "https://images.unsplash.com/photo-1508610048659-a06b669e3321?auto=format&fit=crop&w=600&q=80",
-      "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=600&q=80"
+      "https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&w=800&q=80"
     ],
-    description: "Photo 1: Altar Setup. Photo 2: Plain Isolated Lotus Stems. Photo 3: Lotus Pair Pack.",
+    imageUrl: "https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&w=800&q=80",
+    description: "Divine pink lotus flowers offered to Goddess Lakshmi and Lord Vishnu.",
     tags: ["Pooja Flowers", "Lotus"]
   },
 
@@ -224,11 +230,11 @@ export const INITIAL_PRODUCTS = [
     discountValue: 10,
     inStock: true,
     images: [
-      "C:\\Users\\chait\\.gemini\\antigravity\\brain\\bd4199c6-e579-446a-bf03-7c398bed4f81\\red_roses_gulabi_1786136783051.jpg",
-      "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80",
-      "https://images.unsplash.com/photo-1548695607-9c73430ba065?auto=format&fit=crop&w=600&q=80"
+      "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80",
+      "https://images.unsplash.com/photo-1548695607-9c73430ba065?auto=format&fit=crop&w=800&q=80"
     ],
-    description: "Photo 1: Rose Arrangement. Photo 2: Plain Isolated Bouquet. Photo 3: Stem Detail.",
+    imageUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80",
+    description: "Beautifully hand-wrapped red rose bouquet for gifts and celebrations.",
     tags: ["Bouquet", "Anniversary"]
   },
   {
@@ -247,11 +253,10 @@ export const INITIAL_PRODUCTS = [
     discountValue: 0,
     inStock: true,
     images: [
-      "https://images.unsplash.com/photo-1508610048659-a06b669e3321?auto=format&fit=crop&w=600&q=80",
-      "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80",
-      "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?auto=format&fit=crop&w=600&q=80"
+      "https://images.unsplash.com/photo-1508610048659-a06b669e3321?auto=format&fit=crop&w=800&q=80"
     ],
-    description: "Photo 1: Luxury Lily Setup. Photo 2: Plain Isolated Bouquet. Photo 3: Stem Close-up.",
+    imageUrl: "https://images.unsplash.com/photo-1508610048659-a06b669e3321?auto=format&fit=crop&w=800&q=80",
+    description: "Elegant long-lasting pink lily stems wrapped with seasonal fillers.",
     tags: ["Bouquet", "Birthday"]
   },
 
@@ -272,11 +277,10 @@ export const INITIAL_PRODUCTS = [
     discountValue: 0,
     inStock: true,
     images: [
-      "C:\\Users\\chait\\.gemini\\antigravity\\brain\\bd4199c6-e579-446a-bf03-7c398bed4f81\\garland_haras_1786136935550.jpg",
-      "https://images.unsplash.com/photo-1596073413225-300dd1d416c2?auto=format&fit=crop&w=600&q=80",
-      "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?auto=format&fit=crop&w=600&q=80"
+      "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?auto=format&fit=crop&w=800&q=80"
     ],
-    description: "Photo 1: Varmala Wear. Photo 2: Plain Flat Lay Garland. Photo 3: Flower Weave.",
+    imageUrl: "https://images.unsplash.com/photo-1563241527-3004b7be0ffd?auto=format&fit=crop&w=800&q=80",
+    description: "Heavy woven bridal and groom wedding garlands.",
     tags: ["Wedding", "Varmala"]
   },
 
@@ -297,11 +301,10 @@ export const INITIAL_PRODUCTS = [
     discountValue: 0,
     inStock: true,
     images: [
-      "C:\\Users\\chait\\.gemini\\antigravity\\brain\\bd4199c6-e579-446a-bf03-7c398bed4f81\\bel_patra_1786136910785.jpg",
-      "C:\\Users\\chait\\.gemini\\antigravity\\brain\\bd4199c6-e579-446a-bf03-7c398bed4f81\\bel_patra_plain_1786137069495.jpg",
-      "https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?auto=format&fit=crop&w=600&q=80"
+      "https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?auto=format&fit=crop&w=800&q=80"
     ],
-    description: "Photo 1: Sacred Worship Setup. Photo 2: Plain Background Isolated Bel Patra Sprig (Exact Delivered Item). Photo 3: Pack Quantity.",
+    imageUrl: "https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?auto=format&fit=crop&w=800&q=80",
+    description: "Fresh 3-leaf Bel Patra sprigs for Lord Shiva Abhisheka.",
     tags: ["Pooja Leaves"]
   },
   {
@@ -320,11 +323,10 @@ export const INITIAL_PRODUCTS = [
     discountValue: 0,
     inStock: true,
     images: [
-      "C:\\Users\\chait\\.gemini\\antigravity\\brain\\bd4199c6-e579-446a-bf03-7c398bed4f81\\tulsi_leaves_1786136889205.jpg",
-      "https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?auto=format&fit=crop&w=600&q=80",
-      "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=600&q=80"
+      "https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?auto=format&fit=crop&w=800&q=80"
     ],
-    description: "Photo 1: Fresh Sprig Close-up. Photo 2: Plain Isolated Leaves. Photo 3: Wrapped Bunch.",
+    imageUrl: "https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?auto=format&fit=crop&w=800&q=80",
+    description: "Sacred Krishna Tulasi sprigs for daily altar worship.",
     tags: ["Pooja Leaves"]
   },
 
@@ -345,11 +347,10 @@ export const INITIAL_PRODUCTS = [
     discountValue: 15,
     inStock: true,
     images: [
-      "C:\\Users\\chait\\.gemini\\antigravity\\brain\\bd4199c6-e579-446a-bf03-7c398bed4f81\\ganesh_pooja_kit_1786136981367.jpg",
-      "https://images.unsplash.com/photo-1606744888344-493238951221?auto=format&fit=crop&w=600&q=80",
-      "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?auto=format&fit=crop&w=600&q=80"
+      "https://images.unsplash.com/photo-1606744888344-493238951221?auto=format&fit=crop&w=800&q=80"
     ],
-    description: "Photo 1: Altar Setup. Photo 2: Plain Isolated Kit Items. Photo 3: Boxed Packaging.",
+    imageUrl: "https://images.unsplash.com/photo-1606744888344-493238951221?auto=format&fit=crop&w=800&q=80",
+    description: "Complete festival pooja box containing flowers, leaves, dhoop, agarbatti, kumkum & wicks.",
     tags: ["Pooja Kit"]
   }
 ];
@@ -359,7 +360,8 @@ export const INITIAL_BANNERS = [
     id: "b_1",
     title: "Fresh Morning Pooja Flowers & Garlands",
     subtitle: "Rose, Sevanthige, Jasmine, Bel Patra & Complete Pooja Kits",
-    imageUrl: "C:\\Users\\chait\\.gemini\\antigravity\\brain\\bd4199c6-e579-446a-bf03-7c398bed4f81\\ganesh_pooja_kit_1786136981367.jpg",
+    imageUrl: "https://images.unsplash.com/photo-1606744888344-493238951221?auto=format&fit=crop&w=1200&q=80",
+    image_url: "https://images.unsplash.com/photo-1606744888344-493238951221?auto=format&fit=crop&w=1200&q=80",
     badge: "POOJA SPECIAL"
   }
 ];

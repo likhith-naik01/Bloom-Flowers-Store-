@@ -44,10 +44,15 @@ CREATE TABLE IF NOT EXISTS orders (
 CREATE TABLE IF NOT EXISTS banners (
   id SERIAL PRIMARY KEY,
   title TEXT,
+  subtitle TEXT,
+  badge TEXT,
   image_url TEXT NOT NULL,
   link TEXT,
   active BOOLEAN DEFAULT true
 );
+
+ALTER TABLE banners ADD COLUMN IF NOT EXISTS subtitle TEXT;
+ALTER TABLE banners ADD COLUMN IF NOT EXISTS badge TEXT;
 
 -- 5. Admins Table
 CREATE TABLE IF NOT EXISTS admins (
