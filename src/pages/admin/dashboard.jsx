@@ -302,55 +302,50 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none mb-4">
             <button
               onClick={() => setActiveTab('orders_active')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                activeTab === 'orders_active'
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === 'orders_active'
                   ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/30'
                   : 'bg-slate-800/80 text-slate-300 border border-white/5'
-              }`}
+                }`}
             >
               <Inbox className="w-3.5 h-3.5" /> Active Orders ({activeOrders.length})
             </button>
 
             <button
               onClick={() => setActiveTab('orders_completed')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                activeTab === 'orders_completed'
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === 'orders_completed'
                   ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/30'
                   : 'bg-slate-800/80 text-slate-300 border border-white/5'
-              }`}
+                }`}
             >
               <CheckCircle className="w-3.5 h-3.5 text-emerald-400" /> Completed ({completedOrders.length})
             </button>
 
             <button
               onClick={() => setActiveTab('banner')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                activeTab === 'banner'
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === 'banner'
                   ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/30'
                   : 'bg-slate-800/80 text-slate-300 border border-white/5'
-              }`}
+                }`}
             >
               <ImageIcon className="w-3.5 h-3.5" /> 1. Special Offers Banner
             </button>
 
             <button
               onClick={() => setActiveTab('categories')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                activeTab === 'categories'
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === 'categories'
                   ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/30'
                   : 'bg-slate-800/80 text-slate-300 border border-white/5'
-              }`}
+                }`}
             >
               <Layers className="w-3.5 h-3.5" /> 2. Categories Grid
             </button>
 
             <button
               onClick={() => setActiveTab('products')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                activeTab === 'products'
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${activeTab === 'products'
                   ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/30'
                   : 'bg-slate-800/80 text-slate-300 border border-white/5'
-              }`}
+                }`}
             >
               <Package className="w-3.5 h-3.5" /> 3. Products Catalog
             </button>
@@ -504,14 +499,14 @@ export default function AdminDashboard() {
                 prodSectionFilter === 'all'
                   ? true
                   : prodSectionFilter === 'regular'
-                  ? !isSpecial
-                  : isSpecial;
-              
+                    ? !isSpecial
+                    : isSpecial;
+
               const pCatIds = Array.isArray(p.categoryIds) ? p.categoryIds : (p.categoryId ? [p.categoryId] : []);
               const matchesCat = prodCatFilter === 'all' || pCatIds.includes(prodCatFilter);
 
               const matchesSearch = !adminProdSearch || matchProductSearch(p, adminProdSearch);
-                  
+
               return matchesSection && matchesCat && matchesSearch;
             });
 
@@ -541,31 +536,28 @@ export default function AdminDashboard() {
                   <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
                     <button
                       onClick={() => setProdSectionFilter('all')}
-                      className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-                        prodSectionFilter === 'all'
+                      className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${prodSectionFilter === 'all'
                           ? 'bg-rose-600 text-white shadow-md'
                           : 'bg-slate-800/80 text-slate-400 border border-white/5 hover:bg-slate-700'
-                      }`}
+                        }`}
                     >
                       All Products ({products.length})
                     </button>
                     <button
                       onClick={() => setProdSectionFilter('regular')}
-                      className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-                        prodSectionFilter === 'regular'
+                      className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${prodSectionFilter === 'regular'
                           ? 'bg-rose-600 text-white shadow-md'
                           : 'bg-slate-800/80 text-slate-400 border border-white/5 hover:bg-slate-700'
-                      }`}
+                        }`}
                     >
                       📦 Regular Catalog ({regularCount})
                     </button>
                     <button
                       onClick={() => setProdSectionFilter('special')}
-                      className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-                        prodSectionFilter === 'special'
+                      className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${prodSectionFilter === 'special'
                           ? 'bg-amber-600 text-white shadow-md'
                           : 'bg-slate-800/80 text-slate-400 border border-white/5 hover:bg-slate-700'
-                      }`}
+                        }`}
                     >
                       🏷️ Special Discounts ({specialCount})
                     </button>
@@ -630,9 +622,8 @@ export default function AdminDashboard() {
                                 SL-{p.slNo || 1}
                               </span>
                               <h3 className="font-bold text-sm text-white truncate">{p.nameEn}</h3>
-                              <span className={`px-1.5 py-0.2 rounded-md text-[9px] font-extrabold ${
-                                isSpecial ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-slate-700/60 text-slate-300'
-                              }`}>
+                              <span className={`px-1.5 py-0.2 rounded-md text-[9px] font-extrabold ${isSpecial ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-slate-700/60 text-slate-300'
+                                }`}>
                                 {isSpecial ? '🏷️ Special Offer' : '📦 Regular'}
                               </span>
                             </div>
@@ -660,11 +651,10 @@ export default function AdminDashboard() {
                             {/* Stock Toggle Button */}
                             <button
                               onClick={() => handleStockToggle(p)}
-                              className={`mt-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border transition-colors ${
-                                p.inStock
+                              className={`mt-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border transition-colors ${p.inStock
                                   ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
                                   : 'bg-red-950/80 text-red-300 border-red-500/40'
-                              }`}
+                                }`}
                             >
                               {p.inStock ? '✅ In Stock' : '⚠️ Sold Out'}
                             </button>
