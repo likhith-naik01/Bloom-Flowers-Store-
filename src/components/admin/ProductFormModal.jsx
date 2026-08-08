@@ -37,7 +37,8 @@ export default function ProductFormModal({ product, categories = [], onClose, on
       setCategoryIds(cats.filter(Boolean));
 
       setPrice(product.price || '');
-      setUnit(product.unit || 'bunch');
+      const existingUnit = product.unit || (Array.isArray(product.unitVariants) && product.unitVariants[0]?.unit) || 'piece';
+      setUnit(existingUnit);
       setSlNo(product.slNo || '');
       setDiscountType(product.discountType || 'none');
       setDiscountValue(product.discountValue || 0);
@@ -59,7 +60,7 @@ export default function ProductFormModal({ product, categories = [], onClose, on
         return categories[0]?.id ? [categories[0].id] : [];
       });
       setPrice('');
-      setUnit('bunch');
+      setUnit('piece');
       setDiscountType('none');
       setDiscountValue(0);
       setInStock(true);

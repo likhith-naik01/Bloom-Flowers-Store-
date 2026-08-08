@@ -5,7 +5,7 @@ import { INITIAL_PRODUCTS } from './sampleData.js';
  * Searches item properties first, then live loaded products, then sampleData fallback.
  */
 export function getOrderItemDetails(it, liveProducts = []) {
-  if (!it) return { img: '', unit: 'bunch', matchingProd: null };
+  if (!it) return { img: '', unit: 'piece', matchingProd: null };
 
   const allProds = Array.isArray(liveProducts) && liveProducts.length > 0
     ? [...liveProducts, ...INITIAL_PRODUCTS]
@@ -33,7 +33,7 @@ export function getOrderItemDetails(it, liveProducts = []) {
     (Array.isArray(matchingProd?.images) && matchingProd.images[0]) ||
     '';
 
-  const unit = it.selectedUnit || it.unit || matchingProd?.unit || 'bunch';
+  const unit = it.selectedUnit || it.unit || matchingProd?.unit || (Array.isArray(matchingProd?.unitVariants) && matchingProd.unitVariants[0]?.unit) || 'piece';
 
   return { img, unit, matchingProd };
 }
