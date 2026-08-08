@@ -170,7 +170,7 @@ export default function ProductFormModal({ product, autoSlNo, categories = [], o
     try {
       const finalUnit = unit || 'piece';
       let finalVariants = Array.isArray(unitVariants) && unitVariants.length > 0
-        ? unitVariants.map((v, i) => (i === 0 ? { ...v, unit: finalUnit, price: Number(price) } : v))
+        ? unitVariants
         : [{ unit: finalUnit, price: Number(price) }];
 
       await onSave({
