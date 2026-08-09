@@ -7,7 +7,6 @@ import BottomNav from '../components/layout/BottomNav';
 import { useShop } from '../context/ShopContext';
 import { getOrderItemDetails } from '../lib/orderHelper';
 import { CheckCircle2, MessageCircle, Clock, ArrowRight, PackageCheck } from 'lucide-react';
-import { generateCustomerWhatsAppLink } from '../lib/whatsapp';
 
 export default function OrderSuccess() {
   const router = useRouter();
@@ -111,17 +110,6 @@ export default function OrderSuccess() {
           )}
 
           <div className="flex flex-col gap-2.5 w-full">
-            {order && (
-              <a
-                href={generateCustomerWhatsAppLink(order)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 transition-all"
-              >
-                <MessageCircle className="w-4 h-4" /> Message Shop Owner on WhatsApp
-              </a>
-            )}
-
             <Link
               href="/my-orders"
               className="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 border border-white/10"

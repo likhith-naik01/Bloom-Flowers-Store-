@@ -585,13 +585,18 @@ export const db = {
           customerName: o.customer_name,
           customerPhone: o.customer_phone,
           customerAddress: o.customer_address,
-          deliveryDate: o.delivery_date,
+          deliveryAddress: o.customer_address || o.delivery_address || o.deliveryAddress || '',
+          deliveryDate: o.delivery_date || o.deliveryDate || '',
+          deliveryTimeSlot: o.delivery_time_slot || o.deliveryTimeSlot || 'Morning',
           items: o.items || [],
-          total: Number(o.total_amount || 0),
+          total: Number(o.total_amount || o.total || 0),
+          deliveryCharge: Number(o.delivery_charge || o.deliveryCharge || 0),
+          isBulkOrder: Boolean(o.is_bulk_order || o.isBulkOrder),
           status: o.status,
-          paymentStatus: o.payment_status,
-          notes: o.notes,
-          createdAt: o.created_at
+          paymentStatus: o.payment_status || o.paymentStatus || 'cod',
+          orderNote: o.notes || o.orderNote || '',
+          notes: o.notes || o.orderNote || '',
+          createdAt: o.created_at || o.createdAt
         }));
       }
     }
@@ -599,7 +604,12 @@ export const db = {
     return orders.filter(o => {
       const p = (o.customerPhone || '').replace(/\D/g, '');
       return p.includes(cleanPhone) || cleanPhone.includes(p);
-    });
+    }).map(o => ({
+      ...o,
+      deliveryAddress: o.deliveryAddress || o.customerAddress || '',
+      deliveryTimeSlot: o.deliveryTimeSlot || o.delivery_time_slot || 'Morning',
+      orderNote: o.orderNote || o.notes || ''
+    }));
   },
   createOrder: async (orderData) => {
     let orderCount = 0;

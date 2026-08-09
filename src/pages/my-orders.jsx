@@ -24,20 +24,38 @@ export default function MyOrders() {
   }, []);
 
   const fetchOrders = async (phoneNum) => {
-    if (!phoneNum) return;
+    const trimmed = phoneNum ? phoneNum.trim() : '';
+    if (!trimmed) {
+      setOrders([]);
+      setSearched(false);
+      return;
+    }
     try {
       setLoading(true);
       setSearched(true);
-      const res = await fetch(`/api/orders/lookup?phone=${encodeURIComponent(phoneNum)}`);
+      const res = await fetch(`/api/orders/lookup?phone=${encodeURIComponent(trimmed)}`);
       if (res.ok) {
         const data = await res.json();
-        setOrders(data);
+        setOrders(Array.isArray(data) ? data : []);
       }
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePhoneChange = (e) => {
+    const val = e.target.value;
+    setPhone(val);
+    try {
+      if (val) {
+        localStorage.setItem('customer_last_phone', val);
+      } else {
+        localStorage.removeItem('customer_last_phone');
+      }
+    } catch (e) {}
+    fetchOrders(val);
   };
 
   const handleSearch = (e) => {
@@ -77,27 +95,18 @@ export default function MyOrders() {
           </h1>
 
           <form onSubmit={handleSearch} className="mb-4">
-            <label className="text-xs font-semibold text-slate-300 mb-1 block">
+            <label className="text-xs font-semibold text-slate-300 mb-1.5 block">
               Lookup Previous Orders by Phone Number
             </label>
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Phone className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-                <input
-                  type="tel"
-                  required
-                  placeholder="Enter your phone number..."
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 rounded-xl glass-panel text-sm text-white placeholder-slate-500 border border-white/10 focus:outline-none focus:border-rose-500/50"
-                />
-              </div>
-              <button
-                type="submit"
-                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-lg shadow-rose-600/30"
-              >
-                Lookup
-              </button>
+            <div className="relative">
+              <Phone className="absolute left-3.5 top-3 w-4 h-4 text-rose-400" />
+              <input
+                type="tel"
+                placeholder="Enter your phone number..."
+                value={phone}
+                onChange={handlePhoneChange}
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-panel text-sm text-white placeholder-slate-500 border border-white/10 focus:outline-none focus:border-rose-500/50 transition-all shadow-md"
+              />
             </div>
           </form>
 
