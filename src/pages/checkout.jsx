@@ -250,12 +250,7 @@ export default function Checkout() {
         setSubmitting(true);
         setError('');
 
-        const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
-        if (!razorpayKey || razorpayKey === 'rzp_test_your_key_id') {
-          setError('Razorpay Key ID is not configured. Please add NEXT_PUBLIC_RAZORPAY_KEY_ID to your .env.local file.');
-          setSubmitting(false);
-          return;
-        }
+        const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_live_TRex73mrRzbSqz';
 
         const scriptLoaded = await loadRazorpayScript();
         if (!scriptLoaded) {

@@ -2,12 +2,8 @@ import Razorpay from 'razorpay';
 import crypto from 'crypto';
 
 export function getRazorpayInstance() {
-  const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
-
-  if (!keyId || !keySecret || keyId === 'rzp_test_your_key_id') {
-    throw new Error('Razorpay API keys are not configured in .env.local');
-  }
+  const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID || 'rzp_live_TRex73mrRzbSqz';
+  const keySecret = process.env.RAZORPAY_KEY_SECRET || 'BblGzFjr6uqY5VuiqFakgsaE';
 
   return new Razorpay({
     key_id: keyId,
@@ -16,7 +12,7 @@ export function getRazorpayInstance() {
 }
 
 export function verifyRazorpaySignature({ razorpay_order_id, razorpay_payment_id, razorpay_signature }) {
-  const secret = process.env.RAZORPAY_KEY_SECRET;
+  const secret = process.env.RAZORPAY_KEY_SECRET || 'BblGzFjr6uqY5VuiqFakgsaE';
   if (!secret) return false;
 
   const generatedSignature = crypto
@@ -28,37 +24,34 @@ export function verifyRazorpaySignature({ razorpay_order_id, razorpay_payment_id
 }
 
 export async function createPaymentLink({ amount, description, customer, orderId }) {
-  const instance = getRazorpayInstance();
-  const linkResponse = await instance.paymentLink.create({
-    amount: Math.round(Number(amount) * 100),
-    currency: 'INR',
-    accept_partial: false,
-    description: description || `Payment for Order #${orderId}`,
-    customer: {
-      name: customer?.name || 'Customer',
-      contact: customer?.phone ? String(customer.phone).replace(/\D/g, '') : '',
-      email: customer?.email || ''
-    },
-    notify: {
-      sms: false,
-      email: false
-    },
-    reminder_enable: true,
-    notes: {
-      order_id: orderId
-    },
-    callback_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/my-orders/${orderId}`,
-    callback_method: 'get'
-  });
+  try {
+    const razorpay = getRazorpayInstance();
+    const amountInPaise = Math.round(Number(amount) * 100);
 
-  return linkResponse;
-}
+    const paymentLink = await razorpay.paymentLink.create({
+      amount: amountInPaise,
+      currency: 'INR',
+      accept_partial: false,
+      description: description || `Payment for Bloom Order #${orderId}`,
+      customer: {
+        name: customer?.name || 'Customer',
+        phone: customer?.phone ? String(customer.phone) : undefined,
+        email: customer?.email || undefined,
+      },
+      notify: {
+        sms: true,
+        whatsapp: true,
+        email: false
+      },
+      reminder_enable: true,
+      notes: {
+        order_id: String(orderId)
+      }
+    });
 
-export function verifyWebhookSignature(rawBody, signature, secret) {
-  if (!secret || !signature) return false;
-  const expectedSignature = crypto
-    .createHmac('sha256', secret)
-    .update(rawBody)
-    .digest('hex');
-  return expectedSignature === signature;
+    return paymentLink;
+  } catch (error) {
+    console.error('Error creating Razorpay Payment Link:', error);
+    throw error;
+  }
 }
