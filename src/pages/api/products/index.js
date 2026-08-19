@@ -1,16 +1,17 @@
-import { db } from '../../../lib/db';
+import { db } from '../../../backend/db';
 
 export const config = {
   api: {
     bodyParser: {
       sizeLimit: '25mb'
-    }
+    },
+    responseLimit: '10mb'
   }
 };
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
-    const products = await db.getProducts();
+    const products = await db.getRankedProducts();
     return res.status(200).json(products);
   }
 

@@ -1,16 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
-import Header from '../components/layout/Header';
-import BottomNav from '../components/layout/BottomNav';
-import ProductCard from '../components/customer/ProductCard';
-import { useShop } from '../context/ShopContext';
-import { matchProductSearch } from '../lib/orderHelper';
-import { Search } from 'lucide-react';
+import { useRouter } from 'next/router';
+import Header from '../frontend/components/layout/Header';
+import BottomNav from '../frontend/components/layout/BottomNav';
+import ProductCard from '../frontend/components/customer/ProductCard';
+import { useShop } from '../frontend/context/ShopContext';
+import { matchProductSearch } from '../backend/orderHelper';
+import { Sparkles, Search } from 'lucide-react';
 
 export default function Shop() {
+  const router = useRouter();
   const { categories, products } = useShop();
   const [selectedCat, setSelectedCat] = useState('all');
   const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    if (router.query.q) {
+      setSearch(router.query.q);
+    }
+    if (router.query.cat) {
+      setSelectedCat(router.query.cat);
+    }
+  }, [router.query]);
 
   const filteredProducts = products.filter((p) => {
     const catIds = Array.isArray(p.categoryIds) ? p.categoryIds : (p.categoryId ? [p.categoryId] : []);
@@ -25,64 +36,59 @@ export default function Shop() {
         <title>Shop Flower Catalog | Bloom</title>
       </Head>
 
-      <div className="app-container">
-        <Header />
+      <div className="app-container rangoli-pattern min-h-screen flex flex-col justify-between">
+        <div>
+          <Header searchQuery={search} setSearchQuery={setSearch} />
 
-        <main className="px-4 py-3 flex-1">
-          <h1 className="text-xl font-extrabold text-white mb-2">Explore Flower Catalog</h1>
+          <main className="px-4 py-3 flex-1">
+            <h1 className="text-xl font-serif font-extrabold text-templeRed mb-2 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-marigold" /> Explore Flower Catalog
+            </h1>
 
-          {/* Search Bar */}
-          <div className="relative mb-3">
-            <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search flowers by Name or SL No (e.g. SL-1, Jasmine, Chendu)..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-panel text-sm text-white placeholder-slate-400 focus:outline-none border border-white/10"
-            />
-          </div>
-
-          {/* Category Chips */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none mb-4">
-            <button
-              onClick={() => setSelectedCat('all')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-                selectedCat === 'all'
-                  ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/30'
-                  : 'bg-slate-800/80 text-slate-300 border border-white/5 hover:bg-slate-700'
-              }`}
-            >
-              All Items ({products.length})
-            </button>
-            {categories.map((cat) => (
+            {/* Category Filter Chips */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none my-3">
               <button
-                key={cat.id}
-                onClick={() => setSelectedCat(cat.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-                  selectedCat === cat.id
-                    ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/30'
-                    : 'bg-slate-800/80 text-slate-300 border border-white/5 hover:bg-slate-700'
+                onClick={() => setSelectedCat('all')}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border ${
+                  selectedCat === 'all'
+                    ? 'bg-gradient-to-r from-marigold to-templeRed text-creamBg shadow-md border-divineGold/50'
+                    : 'bg-creamCard text-darkBrown border-divineGold/30 hover:bg-marigold/10'
                 }`}
               >
-                {cat.nameEn || cat.name}
+                All Items ({products.length})
               </button>
-            ))}
-          </div>
+              {categories.map((cat) => {
+                const cleanCatName = (cat.nameEn || cat.name || '').replace(/^[^\w\s]+/, '').trim();
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => setSelectedCat(cat.id)}
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border ${
+                      selectedCat === cat.id
+                        ? 'bg-gradient-to-r from-marigold to-templeRed text-creamBg shadow-md border-divineGold/50'
+                        : 'bg-creamCard text-darkBrown border-divineGold/30 hover:bg-marigold/10'
+                    }`}
+                  >
+                    {cleanCatName}
+                  </button>
+                );
+              })}
+            </div>
 
-          {/* Product Grid */}
-          {filteredProducts.length === 0 ? (
-            <div className="text-center py-12 glass-panel rounded-2xl border border-white/10">
-              <p className="text-sm text-slate-400">No flowers found matching your selection.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-3">
-              {filteredProducts.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
-          )}
-        </main>
+            {/* Product Grid */}
+            {filteredProducts.length === 0 ? (
+              <div className="text-center py-12 bg-creamCard rounded-2xl border border-divineGold/30">
+                <p className="text-sm text-warmMuted font-medium">No flowers found matching your selection.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3 pb-16">
+                {filteredProducts.map((p) => (
+                  <ProductCard key={p.id} product={p} />
+                ))}
+              </div>
+            )}
+          </main>
+        </div>
 
         <BottomNav />
       </div>

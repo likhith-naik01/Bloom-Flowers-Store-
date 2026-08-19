@@ -1,0 +1,122 @@
+@import url('https://fonts.googleapis.com/css2?family=Rozha+One&family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-festive: #FDF8F0;
+  --card-festive: #FFFDF9;
+  --marigold-color: #E8871E;
+  --temple-red-color: #B82D2D;
+  --divine-gold-color: #D4AF37;
+  --dark-brown-color: #2B1810;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-color: #F7EFE3;
+  color: #2B1810;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.font-serif {
+  font-family: 'Rozha One', 'Cinzel', serif;
+}
+
+/* Mobile Frame Wrapper for Desktop Viewing */
+.app-container {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: #FDF8F0;
+  box-shadow: 0 0 40px rgba(43, 24, 16, 0.12);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 80px; /* Space for BottomNav */
+}
+
+/* Glassmorphism & Festive Card Utilities */
+.glass-panel {
+  background: #FFFDF9;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  box-shadow: 0 4px 20px -2px rgba(232, 135, 30, 0.06);
+}
+
+.glass-header {
+  background: rgba(253, 248, 240, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.35);
+}
+
+.glass-nav {
+  background: rgba(255, 253, 249, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(212, 175, 55, 0.35);
+  box-shadow: 0 -4px 20px rgba(43, 24, 16, 0.05);
+}
+
+/* Subtle Rangoli / Floral Pattern Overlay */
+.rangoli-pattern {
+  background-image: radial-gradient(circle at 10px 10px, rgba(232, 135, 30, 0.07) 2px, transparent 0),
+                    radial-gradient(circle at 30px 30px, rgba(184, 45, 45, 0.06) 2px, transparent 0);
+  background-size: 40px 40px;
+}
+
+.festive-border-bottom {
+  position: relative;
+}
+
+.festive-border-bottom::after {
+  content: '';
+  display: block;
+  height: 3px;
+  background: linear-gradient(90deg, #E8871E 0%, #D4AF37 50%, #B82D2D 100%);
+  width: 100%;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F7EFE3;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(232, 135, 30, 0.4);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(232, 135, 30, 0.8);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 15px rgba(232, 135, 30, 0.25); }
+  50% { box-shadow: 0 0 25px rgba(212, 175, 55, 0.5); }
+}
+
+.pulse-glow {
+  animation: pulseGlow 2.5s infinite;
+}

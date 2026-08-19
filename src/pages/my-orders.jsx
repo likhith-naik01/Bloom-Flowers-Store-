@@ -1,29 +1,125 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
-import Header from '../components/layout/Header';
-import BottomNav from '../components/layout/BottomNav';
-import { useShop } from '../context/ShopContext';
-import { getOrderItemDetails } from '../lib/orderHelper';
-import { Phone, Search, Package, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import Link from 'next/link';
+import Header from '../frontend/components/layout/Header';
+import BottomNav from '../frontend/components/layout/BottomNav';
+import OrderCard from '../frontend/components/customer/OrderCard';
+import { useAuth } from '../frontend/context/AuthContext';
+import { createClient } from '../backend/supabase/client';
+import { Clock, Phone, Search, Package, ShoppingBag, RefreshCw } from 'lucide-react';
 
 export default function MyOrders() {
-  const { products = [] } = useShop();
-  const [phone, setPhone] = useState('');
+  const { user, profile, loading: authLoading } = useAuth();
   const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [phoneSearch, setPhoneSearch] = useState('');
   const [searched, setSearched] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    try {
-      const savedPhone = localStorage.getItem('customer_last_phone');
-      if (savedPhone) {
-        setPhone(savedPhone);
-        fetchOrders(savedPhone);
-      }
-    } catch (e) {}
-  }, []);
+    if (authLoading) return;
 
-  const fetchOrders = async (phoneNum) => {
+    const userPhone = profile?.phone || '';
+    fetchUserOrders(user?.id, userPhone);
+  }, [user, profile, authLoading]);
+
+  const fetchUserOrders = async (userId, userPhone) => {
+    try {
+      setLoading(true);
+      const ordersMap = new Map();
+
+      // 1. Supabase Query by user_id
+      const supabase = createClient();
+      if (supabase && userId) {
+        const { data: userData } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+
+        if (Array.isArray(userData)) {
+          userData.forEach((o) => ordersMap.set(o.id, o));
+        }
+
+        // 2. Supabase Query by phone if available
+        const cleanPhone = (userPhone || '').replace(/\D/g, '');
+        if (cleanPhone && cleanPhone.length >= 10) {
+          const { data: phoneData } = await supabase
+            .from('orders')
+            .select('*')
+            .ilike('customer_phone', `%${cleanPhone}%`)
+            .order('created_at', { ascending: false });
+
+          if (Array.isArray(phoneData)) {
+            phoneData.forEach((o) => ordersMap.set(o.id, o));
+          }
+        }
+      }
+
+      // 3. Phone Lookup via API
+      const phoneToLookup = userPhone || localStorage.getItem('customer_last_phone') || '';
+      if (phoneToLookup) {
+        try {
+          const res = await fetch(`/api/orders/lookup?phone=${encodeURIComponent(phoneToLookup)}`);
+          if (res.ok) {
+            const localData = await res.json();
+            if (Array.isArray(localData)) {
+              localData.forEach((o) => {
+                if (!ordersMap.has(o.id)) {
+                  ordersMap.set(o.id, o);
+                }
+              });
+            }
+          }
+        } catch (e) {}
+      }
+
+      // 4. Direct Fetch of last placed order ID from localStorage
+      try {
+        const lastOrderId = localStorage.getItem('customer_last_order_id');
+        if (lastOrderId && !ordersMap.has(lastOrderId)) {
+          const lastRes = await fetch(`/api/orders/${lastOrderId}`);
+          if (lastRes.ok) {
+            const lastOrder = await lastRes.json();
+            if (lastOrder && lastOrder.id) {
+              ordersMap.set(lastOrder.id, lastOrder);
+            }
+          }
+        }
+      } catch (e) {}
+
+      // 5. General Fallback to /api/orders if ordersMap is still empty
+      if (ordersMap.size === 0) {
+        try {
+          const allRes = await fetch('/api/orders');
+          if (allRes.ok) {
+            const allOrders = await allRes.json();
+            if (Array.isArray(allOrders)) {
+              const targetPhone = (phoneToLookup || '').replace(/\D/g, '');
+              allOrders.forEach((o) => {
+                const p = (o.customerPhone || o.customer_phone || '').replace(/\D/g, '');
+                if ((targetPhone && p.includes(targetPhone)) || (userId && (o.userId === userId || o.user_id === userId))) {
+                  ordersMap.set(o.id, o);
+                }
+              });
+            }
+          }
+        } catch (e) {}
+      }
+
+      const combined = Array.from(ordersMap.values()).sort(
+        (a, b) => new Date(b.created_at || b.createdAt) - new Date(a.created_at || a.createdAt)
+      );
+
+      setOrders(combined);
+    } catch (e) {
+      console.error('Error fetching user orders:', e);
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchOrdersByPhone = async (phoneNum) => {
     const trimmed = phoneNum ? phoneNum.trim() : '';
     if (!trimmed) {
       setOrders([]);
@@ -45,39 +141,9 @@ export default function MyOrders() {
     }
   };
 
-  const handlePhoneChange = (e) => {
-    const val = e.target.value;
-    setPhone(val);
-    try {
-      if (val) {
-        localStorage.setItem('customer_last_phone', val);
-      } else {
-        localStorage.removeItem('customer_last_phone');
-      }
-    } catch (e) {}
-    fetchOrders(val);
-  };
-
-  const handleSearch = (e) => {
+  const handlePhoneSearchSubmit = (e) => {
     e.preventDefault();
-    fetchOrders(phone);
-  };
-
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'new':
-        return <span className="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold text-[10px] uppercase border border-blue-500/30">Order Received</span>;
-      case 'contacted':
-        return <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold text-[10px] uppercase border border-amber-500/30">Contacted on WhatsApp</span>;
-      case 'confirmed':
-        return <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold text-[10px] uppercase border border-emerald-500/30">Confirmed</span>;
-      case 'delivered':
-        return <span className="px-2.5 py-0.5 rounded-full bg-green-500/30 text-green-300 font-bold text-[10px] uppercase border border-green-500/40">Delivered</span>;
-      case 'cancelled':
-        return <span className="px-2.5 py-0.5 rounded-full bg-red-500/20 text-red-300 font-bold text-[10px] uppercase border border-red-500/30">Cancelled</span>;
-      default:
-        return <span className="px-2 py-0.5 rounded-full bg-slate-700 text-slate-300 text-[10px]">{status}</span>;
-    }
+    fetchOrdersByPhone(phoneSearch);
   };
 
   return (
@@ -86,103 +152,92 @@ export default function MyOrders() {
         <title>My Orders | Bloom Flower Shop</title>
       </Head>
 
-      <div className="app-container">
+      <div className="app-container rangoli-pattern">
         <Header />
 
-        <main className="px-4 py-3 flex-1">
-          <h1 className="text-xl font-extrabold text-white mb-3 flex items-center gap-2">
-            <Clock className="w-5 h-5 text-rose-400" /> My Orders & History
-          </h1>
-
-          <form onSubmit={handleSearch} className="mb-4">
-            <label className="text-xs font-semibold text-slate-300 mb-1.5 block">
-              Lookup Previous Orders by Phone Number
-            </label>
-            <div className="relative">
-              <Phone className="absolute left-3.5 top-3 w-4 h-4 text-rose-400" />
-              <input
-                type="tel"
-                placeholder="Enter your phone number..."
-                value={phone}
-                onChange={handlePhoneChange}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl glass-panel text-sm text-white placeholder-slate-500 border border-white/10 focus:outline-none focus:border-rose-500/50 transition-all shadow-md"
-              />
+        <main className="px-4 py-4 flex-1 space-y-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-serif font-extrabold text-templeRed flex items-center gap-2">
+              <Clock className="w-5 h-5 text-marigold" /> My Orders & Tracking
+            </h1>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  fetchUserOrders(user?.id, profile?.phone);
+                }}
+                className="p-1.5 rounded-full bg-creamCard hover:bg-creamSurface text-warmMuted hover:text-darkBrown border border-divineGold/30"
+                title="Refresh Orders List"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+              </button>
+              <span className="text-xs text-warmMuted font-bold">
+                {orders.length} {orders.length === 1 ? 'Order' : 'Orders'}
+              </span>
             </div>
-          </form>
+          </div>
 
+          {/* If user is NOT logged in, present Phone Lookup or Login prompt */}
+          {!user && (
+            <div className="bg-creamCard p-4 rounded-2xl border border-divineGold/35 space-y-3 shadow-sm">
+              <div className="text-center pb-2">
+                <p className="text-xs text-darkBrown font-medium">
+                  Logged in users can see all past orders automatically.{' '}
+                  <Link href="/login?redirectTo=/my-orders" className="text-templeRed font-extrabold hover:underline">
+                    Sign In Here
+                  </Link>
+                </p>
+              </div>
+
+              <form onSubmit={handlePhoneSearchSubmit} className="space-y-2">
+                <label className="text-[11px] font-bold text-darkBrown block">
+                  Or Lookup Guest Orders by Phone Number
+                </label>
+                <div className="relative flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Phone className="absolute left-3 top-3 w-4 h-4 text-marigold" />
+                    <input
+                      type="tel"
+                      placeholder="Enter phone number..."
+                      value={phoneSearch}
+                      onChange={(e) => setPhoneSearch(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2.5 rounded-2xl bg-creamSurface text-xs text-darkBrown placeholder-warmMuted border border-divineGold/30 focus:outline-none focus:border-marigold"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-marigold to-templeRed text-creamBg font-bold text-xs flex items-center gap-1 shadow-md shadow-marigold/20"
+                  >
+                    <Search className="w-3.5 h-3.5" /> Search
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Orders List */}
           {loading ? (
-            <div className="text-center py-8 text-slate-400 text-xs">Fetching orders...</div>
-          ) : searched && orders.length === 0 ? (
-            <div className="text-center py-10 glass-panel rounded-2xl border border-white/10">
-              <p className="text-sm text-slate-400">No previous orders found for phone {phone}.</p>
+            <div className="text-center py-10 text-warmMuted text-xs font-medium">
+              Loading orders...
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="bg-creamCard p-10 text-center rounded-2xl border border-divineGold/30 space-y-3 shadow-sm">
+              <Package className="w-10 h-10 text-warmMuted mx-auto" />
+              <p className="text-xs text-warmMuted font-medium">
+                {searched
+                  ? `No orders found for phone number ${phoneSearch}.`
+                  : 'No orders found for your account.'}
+              </p>
+              <Link
+                href="/shop"
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-gradient-to-r from-marigold to-templeRed text-creamBg font-bold text-xs shadow-md shadow-marigold/20"
+              >
+                <ShoppingBag className="w-3.5 h-3.5" /> Explore Shop
+              </Link>
             </div>
           ) : (
-            <div className="space-y-3.5">
+            <div className="space-y-3">
               {orders.map((ord) => (
-                <div key={ord.id} className="glass-panel p-3.5 rounded-2xl border border-white/10">
-                  <div className="flex items-center justify-between pb-2 border-b border-white/10 mb-2">
-                    <div>
-                      <span className="font-extrabold text-sm text-white">Order #{ord.id}</span>
-                      <span className="text-[10px] text-slate-400 block">{new Date(ord.createdAt).toLocaleString()}</span>
-                    </div>
-                    {getStatusBadge(ord.status)}
-                  </div>
-
-                  <div className="text-xs space-y-1 my-2">
-                    <p className="text-slate-300">
-                      <strong>Delivery:</strong> {ord.deliveryDate} ({ord.deliveryTimeSlot})
-                    </p>
-                    <p className="text-slate-300">
-                      <strong>Address:</strong> {ord.deliveryAddress}
-                    </p>
-                    {ord.orderNote && (
-                      <p className="text-amber-300 italic text-[11px]">
-                        <strong>Note:</strong> "{ord.orderNote}"
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="bg-slate-900/60 p-2.5 rounded-xl border border-white/5 my-2.5 space-y-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Ordered Items</span>
-                    {ord.items.map((it, idx) => {
-                      const { img: itemImg, unit: unitDisplay } = getOrderItemDetails(it, products);
-
-                      return (
-                        <div key={idx} className="flex items-center gap-2.5 text-xs text-white">
-                          <div className="relative w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 bg-slate-800 border border-white/10">
-                            {itemImg ? (
-                              <img src={itemImg} alt={it.nameEn || 'Flower'} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-slate-500 text-xs">🌸</div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <span className="font-bold block truncate text-slate-200">{it.nameEn || it.name}</span>
-                            <span className="text-[10px] text-slate-400">Qty: {it.quantity} ({unitDisplay})</span>
-                          </div>
-                          <span className="font-extrabold text-white text-xs">₹{it.price * it.quantity}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="pt-2 border-t border-white/10 space-y-1">
-                    <div className="flex justify-between items-center text-xs text-slate-400">
-                      <span>Delivery Charge</span>
-                      {ord.isBulkOrder ? (
-                        <span className="text-emerald-400 font-bold text-[11px]">FREE (Bulk Order Special)</span>
-                      ) : ord.deliveryCharge > 0 ? (
-                        <span className="text-slate-200 font-bold">₹{ord.deliveryCharge}</span>
-                      ) : (
-                        <span className="text-amber-300 italic text-[11px]">Calculated on WhatsApp</span>
-                      )}
-                    </div>
-                    <div className="flex justify-between items-center pt-1 text-sm font-extrabold text-white">
-                      <span>Total (COD)</span>
-                      <span className="text-rose-400 text-base">₹{ord.total}</span>
-                    </div>
-                  </div>
-                </div>
+                <OrderCard key={ord.id} order={ord} />
               ))}
             </div>
           )}

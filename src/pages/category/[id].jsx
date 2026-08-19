@@ -1,13 +1,12 @@
 import React from 'react';
 import Head from 'next/head';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import Header from '../../components/layout/Header';
-import BottomNav from '../../components/layout/BottomNav';
-import ProductCard from '../../components/customer/ProductCard';
-import { useShop } from '../../context/ShopContext';
-import { ArrowLeft } from 'lucide-react';
+import Header from '../../frontend/components/layout/Header';
+import BottomNav from '../../frontend/components/layout/BottomNav';
+import ProductCard from '../../frontend/components/customer/ProductCard';
+import { useShop } from '../../frontend/context/ShopContext';
+import { ArrowLeft, Sparkles } from 'lucide-react';
 
 export default function CategoryDetail() {
   const router = useRouter();
@@ -22,11 +21,11 @@ export default function CategoryDetail() {
 
   if (!category) {
     return (
-      <div className="app-container">
+      <div className="app-container rangoli-pattern">
         <Header />
-        <div className="p-8 text-center text-slate-400">
-          <p>Category not found.</p>
-          <Link href="/shop" className="text-rose-400 font-bold text-xs mt-2 inline-block">
+        <div className="p-8 text-center text-warmMuted flex-1 flex flex-col justify-center items-center">
+          <p className="font-medium">Category not found.</p>
+          <Link href="/shop" className="text-marigold font-bold text-xs mt-2 inline-block">
             ← Back to Shop
           </Link>
         </div>
@@ -41,20 +40,20 @@ export default function CategoryDetail() {
         <title>{category.nameEn} | Bloom Flower Shop</title>
       </Head>
 
-      <div className="app-container">
+      <div className="app-container rangoli-pattern">
         <Header />
 
         <main className="px-4 py-3 flex-1">
           {/* Back Link */}
           <Link
             href="/"
-            className="inline-flex items-center gap-1 text-xs font-semibold text-rose-400 hover:text-rose-300 mb-3"
+            className="inline-flex items-center gap-1 text-xs font-bold text-marigoldDark hover:text-templeRed mb-3"
           >
             <ArrowLeft className="w-3.5 h-3.5" /> All Categories
           </Link>
 
           {/* Banner Header */}
-          <div className="relative w-full h-36 rounded-2xl overflow-hidden mb-4 border border-white/10 shadow-xl bg-slate-900">
+          <div className="relative w-full h-36 rounded-2xl overflow-hidden mb-4 border border-divineGold/40 shadow-md bg-creamSurface">
             {(category.image || category.imageUrl) && (
               <img
                 src={category.image || category.imageUrl}
@@ -62,27 +61,29 @@ export default function CategoryDetail() {
                 className="absolute inset-0 w-full h-full object-cover"
               />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent flex flex-col justify-end p-4">
-              <h1 className="text-xl font-extrabold text-white">{category.nameEn}</h1>
+            <div className="absolute inset-0 bg-gradient-to-t from-darkBrown via-darkBrown/60 to-transparent flex flex-col justify-end p-4">
+              <h1 className="text-xl font-serif font-extrabold text-creamBg flex items-center gap-1.5">
+                <Sparkles className="w-5 h-5 text-divineGold" /> {category.nameEn}
+              </h1>
               {(category.nameHi || category.nameKn) && (
-                <span className="text-xs text-rose-300 font-semibold">
+                <span className="text-xs text-divineGold font-semibold">
                   {[category.nameHi, category.nameKn].filter(Boolean).join(' • ')}
                 </span>
               )}
               {category.description && (
-                <p className="text-xs text-slate-300 line-clamp-1 mt-0.5">{category.description}</p>
+                <p className="text-xs text-creamBg/90 line-clamp-1 mt-0.5 font-medium">{category.description}</p>
               )}
             </div>
           </div>
 
-          <h2 className="text-sm font-bold text-slate-300 mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-bold text-darkBrown mb-3 flex items-center justify-between">
             <span>Items in {category.nameEn}</span>
-            <span className="text-xs text-slate-500">{categoryProducts.length} Available</span>
+            <span className="text-xs text-warmMuted font-bold">{categoryProducts.length} Available</span>
           </h2>
 
           {categoryProducts.length === 0 ? (
-            <div className="text-center py-12 glass-panel rounded-2xl border border-white/10">
-              <p className="text-sm text-slate-400">No products available in this category yet.</p>
+            <div className="text-center py-12 bg-creamCard rounded-2xl border border-divineGold/30 shadow-sm">
+              <p className="text-sm text-warmMuted font-medium">No products available in this category yet.</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">

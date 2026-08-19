@@ -2,31 +2,45 @@
 module.exports = {
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/frontend/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
       colors: {
-        brand: {
-          50: '#fff1f2',
-          100: '#ffe4e6',
-          500: '#e11d48',
-          600: '#be123c',
-          700: '#9f1239',
-          900: '#4c0519',
+        // Master Named Theme Colors
+        cream: '#FDF8F0',
+        maroon: '#B82D2D',
+        textBrown: '#2B1810',
+        creamBg: '#FDF8F0',
+        creamCard: '#FFFDF9',
+        creamSurface: '#F7EFE3',
+        marigold: {
+          DEFAULT: '#E8871E',
+          dark: '#C26E10',
+          light: '#FDF2E2',
+          500: '#E8871E',
+          600: '#C26E10',
         },
-        emerald: {
-          500: '#10b981',
-          600: '#059669',
+        templeRed: {
+          DEFAULT: '#B82D2D',
+          dark: '#942121',
+          light: '#FDF0F0',
+          500: '#B82D2D',
+          600: '#942121',
         },
-        dark: {
-          900: '#0f172a',
-          800: '#1e293b',
-          700: '#334155',
-        }
+        divineGold: {
+          DEFAULT: '#D4AF37',
+          dark: '#B38F26',
+          light: '#FBF5DF',
+          500: '#D4AF37',
+        },
+        darkBrown: '#2B1810',
+        warmSlate: '#594238',
+        warmMuted: '#8C7367',
       },
       fontFamily: {
+        serif: ['Rozha One', 'Cinzel', 'serif'],
         sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
       }
     },

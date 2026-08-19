@@ -1,4 +1,4 @@
-import { db } from '../../../lib/db';
+import { db } from '../../../backend/db';
 
 export const config = {
   api: {
