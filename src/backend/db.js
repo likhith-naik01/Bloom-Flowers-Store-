@@ -1019,14 +1019,19 @@ export const db = {
   },
 
   deleteCoupon: async (id) => {
+    const targetIdOrCode = String(id || '').trim().toUpperCase();
     // Always delete from local cache & file storage first!
     const local = readDb();
-    local.coupons = (local.coupons || []).filter(c => c.id !== id);
+    local.coupons = (local.coupons || []).filter(c => 
+      c.id !== id && 
+      (c.code || '').toUpperCase() !== targetIdOrCode &&
+      (c.id || '').toUpperCase() !== targetIdOrCode
+    );
     try { writeDb(local); } catch (e) {}
 
     if (supabase) {
       try {
-        await supabase.from('coupons').delete().eq('id', id);
+        await supabase.from('coupons').delete().or(`id.eq.${id},code.eq.${targetIdOrCode}`);
       } catch (e) {
         console.error('Supabase deleteCoupon error:', e);
       }
