@@ -15,6 +15,37 @@ const DEFAULT_PROMO_BANNER = {
   buttonText: 'Claim 10% Offer Now'
 };
 
+const INITIAL_COUPONS = [
+  {
+    id: 'c_bloom10',
+    code: 'BLOOM10',
+    discount_type: 'percentage',
+    discount_value: 10,
+    min_order_value: 0,
+    max_discount_amount: 100,
+    is_first_order_only: false,
+    is_active: true,
+    usage_limit_per_customer: 5,
+    valid_from: null,
+    valid_until: null,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 'c_welcome50',
+    code: 'WELCOME50',
+    discount_type: 'flat',
+    discount_value: 50,
+    min_order_value: 299,
+    max_discount_amount: null,
+    is_first_order_only: true,
+    is_active: true,
+    usage_limit_per_customer: 1,
+    valid_from: null,
+    valid_until: null,
+    created_at: new Date().toISOString()
+  }
+];
+
 let memoryCache = null;
 let lastMtime = 0;
 
@@ -29,7 +60,7 @@ function readDb() {
         products: INITIAL_PRODUCTS,
         banners: INITIAL_BANNERS,
         orders: INITIAL_ORDERS,
-        coupons: [],
+        coupons: INITIAL_COUPONS,
         promoBanner: DEFAULT_PROMO_BANNER,
         admins: [
           { username: 'admin_1', password: 'Ratik@2892' },
@@ -49,7 +80,9 @@ function readDb() {
 
     const fileContent = fs.readFileSync(DB_PATH, 'utf-8');
     memoryCache = JSON.parse(fileContent);
-    if (!Array.isArray(memoryCache.coupons)) memoryCache.coupons = [];
+    if (!Array.isArray(memoryCache.coupons) || memoryCache.coupons.length === 0) {
+      memoryCache.coupons = INITIAL_COUPONS;
+    }
     if (!memoryCache.promoBanner) memoryCache.promoBanner = DEFAULT_PROMO_BANNER;
     global.__MEMORY_CACHE__ = memoryCache;
     lastMtime = stat.mtimeMs;
@@ -882,7 +915,7 @@ export const db = {
 
   // Coupon System
   getCoupons: async () => {
-    let supabaseCoupons = null;
+    let supabaseCoupons = [];
     if (supabase) {
       try {
         const { data, error } = await supabase.from('coupons').select('*').order('created_at', { ascending: false });
@@ -894,17 +927,29 @@ export const db = {
       }
     }
     const local = readDb();
-    const localCoupons = Array.isArray(local.coupons) ? local.coupons : [];
+    const localCoupons = Array.isArray(local.coupons) && local.coupons.length > 0 ? local.coupons : INITIAL_COUPONS;
 
-    if (supabaseCoupons && supabaseCoupons.length > 0) {
-      return supabaseCoupons;
-    }
-    return localCoupons;
+    // Merge local data.json coupons and Supabase coupons seamlessly by code
+    const couponMap = new Map();
+    localCoupons.forEach(c => {
+      if (c && c.code) couponMap.set(c.code.toUpperCase(), c);
+    });
+    supabaseCoupons.forEach(c => {
+      if (c && c.code) couponMap.set(c.code.toUpperCase(), c);
+    });
+
+    return Array.from(couponMap.values());
   },
 
   getCouponByCode: async (code) => {
     if (!code) return null;
     const uppercaseCode = code.trim().toUpperCase();
+    
+    // First search in getCoupons() which merges local and Supabase
+    const allCoupons = await db.getCoupons();
+    const found = allCoupons.find(c => (c.code || '').toUpperCase() === uppercaseCode);
+    if (found) return found;
+
     if (supabase) {
       try {
         const { data, error } = await supabase.from('coupons').select('*').eq('code', uppercaseCode).single();
@@ -913,8 +958,7 @@ export const db = {
         console.error('Supabase getCouponByCode error:', e);
       }
     }
-    const coupons = readDb().coupons || [];
-    return coupons.find(c => (c.code || '').toUpperCase() === uppercaseCode);
+    return null;
   },
 
   addCoupon: async (coupon) => {
