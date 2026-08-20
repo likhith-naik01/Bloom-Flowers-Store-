@@ -15,22 +15,7 @@ const DEFAULT_PROMO_BANNER = {
   buttonText: 'Claim 10% Offer Now'
 };
 
-const INITIAL_COUPONS = [
-  {
-    id: 'c_welcome50',
-    code: 'WELCOME50',
-    discount_type: 'flat',
-    discount_value: 50,
-    min_order_value: 299,
-    max_discount_amount: null,
-    is_first_order_only: true,
-    is_active: true,
-    usage_limit_per_customer: 1,
-    valid_from: null,
-    valid_until: null,
-    created_at: new Date().toISOString()
-  }
-];
+const INITIAL_COUPONS = [];
 
 let memoryCache = null;
 let lastMtime = 0;
@@ -66,8 +51,8 @@ function readDb() {
 
     const fileContent = fs.readFileSync(DB_PATH, 'utf-8');
     memoryCache = JSON.parse(fileContent);
-    if (!Array.isArray(memoryCache.coupons) || memoryCache.coupons.length === 0) {
-      memoryCache.coupons = INITIAL_COUPONS;
+    if (!Array.isArray(memoryCache.coupons)) {
+      memoryCache.coupons = [];
     }
     if (!memoryCache.promoBanner) memoryCache.promoBanner = DEFAULT_PROMO_BANNER;
     global.__MEMORY_CACHE__ = memoryCache;
