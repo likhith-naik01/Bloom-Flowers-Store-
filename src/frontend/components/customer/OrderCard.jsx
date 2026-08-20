@@ -30,17 +30,28 @@ export default function OrderCard({ order }) {
     }
   };
 
+  const formatOrderDateTime = (dateStr) => {
+    if (!dateStr) return null;
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return String(dateStr);
+    return d.toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
   const payMethod = order.payment_method || order.paymentMethod || 'cod';
   const isPaid = order.payment_status === 'paid' || payMethod === 'online';
+  const isPartiallyPaid = order.payment_status === 'partially_paid' || payMethod === 'half_advance';
 
   const shortId = order.id ? `#${order.id.slice(0, 8)}` : '#ORDER';
-  const orderDate = order.created_at || order.createdAt 
-    ? new Date(order.created_at || order.createdAt).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-      })
-    : '';
+  const orderedAtFormatted = formatOrderDateTime(order.created_at || order.createdAt);
+  const rawPaymentDate = order.payment_date || order.paymentDate || order.paid_at || order.paidAt || (isPaid || isPartiallyPaid ? (order.updated_at || order.createdAt) : null);
+  const paymentAtFormatted = formatOrderDateTime(rawPaymentDate);
 
   const itemsList = Array.isArray(order.items) ? order.items : [];
   const displayItems = itemsList.slice(0, 3);
@@ -75,9 +86,18 @@ export default function OrderCard({ order }) {
               </span>
             )}
           </div>
-          <span className="text-[10px] text-warmMuted flex items-center gap-1 mt-0.5 font-medium">
-            <Calendar className="w-3 h-3 text-marigold" /> {orderDate}
-          </span>
+          <div className="space-y-0.5 mt-1">
+            {orderedAtFormatted && (
+              <span className="text-[10px] text-warmMuted flex items-center gap-1 font-semibold">
+                <Calendar className="w-3 h-3 text-marigold" /> Ordered: {orderedAtFormatted}
+              </span>
+            )}
+            {(isPaid || isPartiallyPaid) && paymentAtFormatted && (
+              <span className="text-[10px] text-emerald-800 flex items-center gap-1 font-bold">
+                💳 Paid: {paymentAtFormatted}
+              </span>
+            )}
+          </div>
         </div>
         {getStatusBadge(order.status)}
       </div>

@@ -6,6 +6,15 @@ import { supabase } from './supabase.js';
 const DB_PATH = path.join(process.cwd(), 'data.json');
 const TMP_PATH = path.join(process.cwd(), 'data.json.tmp');
 
+const DEFAULT_PROMO_BANNER = {
+  enabled: true,
+  badgeText: 'LIMITED FESTIVAL DEAL',
+  couponCode: 'BLOOM10',
+  title: 'Get Flat 10% OFF + Free Morning Delivery on Fresh Flowers & Garlands!',
+  subtitle: 'Handpicked fresh blooms delivered directly from local flower markets to your doorstep before sunrise.',
+  buttonText: 'Claim 10% Offer Now'
+};
+
 let memoryCache = null;
 let lastMtime = 0;
 
@@ -20,6 +29,8 @@ function readDb() {
         products: INITIAL_PRODUCTS,
         banners: INITIAL_BANNERS,
         orders: INITIAL_ORDERS,
+        coupons: [],
+        promoBanner: DEFAULT_PROMO_BANNER,
         admins: [
           { username: 'admin_1', password: 'Ratik@2892' },
           { username: 'Likhith', password: 'Likhith@0501' }
@@ -38,6 +49,8 @@ function readDb() {
 
     const fileContent = fs.readFileSync(DB_PATH, 'utf-8');
     memoryCache = JSON.parse(fileContent);
+    if (!Array.isArray(memoryCache.coupons)) memoryCache.coupons = [];
+    if (!memoryCache.promoBanner) memoryCache.promoBanner = DEFAULT_PROMO_BANNER;
     global.__MEMORY_CACHE__ = memoryCache;
     lastMtime = stat.mtimeMs;
     return memoryCache;
@@ -869,15 +882,24 @@ export const db = {
 
   // Coupon System
   getCoupons: async () => {
+    let supabaseCoupons = null;
     if (supabase) {
       try {
         const { data, error } = await supabase.from('coupons').select('*').order('created_at', { ascending: false });
-        if (!error && data) return data;
+        if (!error && Array.isArray(data)) {
+          supabaseCoupons = data;
+        }
       } catch (e) {
         console.error('Supabase getCoupons error:', e);
       }
     }
-    return readDb().coupons || [];
+    const local = readDb();
+    const localCoupons = Array.isArray(local.coupons) ? local.coupons : [];
+
+    if (supabaseCoupons && supabaseCoupons.length > 0) {
+      return supabaseCoupons;
+    }
+    return localCoupons;
   },
 
   getCouponByCode: async (code) => {
@@ -892,7 +914,7 @@ export const db = {
       }
     }
     const coupons = readDb().coupons || [];
-    return coupons.find(c => c.code.toUpperCase() === uppercaseCode);
+    return coupons.find(c => (c.code || '').toUpperCase() === uppercaseCode);
   },
 
   addCoupon: async (coupon) => {
@@ -911,23 +933,36 @@ export const db = {
       created_at: new Date().toISOString()
     };
 
+    // Always update local cache & file storage first so user coupon additions never vanish!
+    const local = readDb();
+    local.coupons = Array.isArray(local.coupons) ? local.coupons : [];
+    const existingIdx = local.coupons.findIndex(c => c.id === formatted.id || c.code === formatted.code);
+    if (existingIdx >= 0) {
+      local.coupons[existingIdx] = formatted;
+    } else {
+      local.coupons.unshift(formatted);
+    }
+    try { writeDb(local); } catch (e) {}
+
     if (supabase) {
       try {
-        const { data, error } = await supabase.from('coupons').insert([formatted]).select().single();
+        const { data, error } = await supabase.from('coupons').upsert([formatted]).select().single();
         if (!error && data) return data;
       } catch (e) {
         console.error('Supabase addCoupon error:', e);
       }
     }
 
-    const local = readDb();
-    local.coupons = local.coupons || [];
-    local.coupons.unshift(formatted);
-    try { writeDb(local); } catch (e) {}
     return formatted;
   },
 
   updateCoupon: async (id, updated) => {
+    // Always update local cache & file storage first!
+    const local = readDb();
+    local.coupons = (local.coupons || []).map(c => c.id === id ? { ...c, ...updated } : c);
+    try { writeDb(local); } catch (e) {}
+    const updatedLocal = local.coupons.find(c => c.id === id);
+
     if (supabase) {
       try {
         const { data, error } = await supabase.from('coupons').update(updated).eq('id', id).select().single();
@@ -936,13 +971,15 @@ export const db = {
         console.error('Supabase updateCoupon error:', e);
       }
     }
-    const local = readDb();
-    local.coupons = (local.coupons || []).map(c => c.id === id ? { ...c, ...updated } : c);
-    try { writeDb(local); } catch (e) {}
-    return local.coupons.find(c => c.id === id);
+    return updatedLocal;
   },
 
   deleteCoupon: async (id) => {
+    // Always delete from local cache & file storage first!
+    const local = readDb();
+    local.coupons = (local.coupons || []).filter(c => c.id !== id);
+    try { writeDb(local); } catch (e) {}
+
     if (supabase) {
       try {
         await supabase.from('coupons').delete().eq('id', id);
@@ -950,9 +987,68 @@ export const db = {
         console.error('Supabase deleteCoupon error:', e);
       }
     }
+    return true;
+  },
+
+  // Promo Offer Banner Persistence
+  getPromoBanner: async () => {
+    if (supabase) {
+      try {
+        const { data, error } = await supabase.from('promo_banner').select('*').eq('id', 'main_promo').single();
+        if (!error && data) {
+          return {
+            enabled: data.enabled !== false,
+            badgeText: data.badge_text || data.badgeText || DEFAULT_PROMO_BANNER.badgeText,
+            couponCode: data.coupon_code || data.couponCode || DEFAULT_PROMO_BANNER.couponCode,
+            title: data.title || DEFAULT_PROMO_BANNER.title,
+            subtitle: data.subtitle || DEFAULT_PROMO_BANNER.subtitle,
+            buttonText: data.button_text || data.buttonText || DEFAULT_PROMO_BANNER.buttonText
+          };
+        }
+      } catch (e) {
+        console.error('Supabase getPromoBanner error:', e);
+      }
+    }
     const local = readDb();
-    local.coupons = (local.coupons || []).filter(c => c.id !== id);
+    return local.promoBanner || DEFAULT_PROMO_BANNER;
+  },
+
+  updatePromoBanner: async (newConfig) => {
+    const local = readDb();
+    const current = local.promoBanner || DEFAULT_PROMO_BANNER;
+
+    const updated = {
+      enabled: newConfig.enabled !== undefined ? Boolean(newConfig.enabled) : current.enabled,
+      badgeText: newConfig.badgeText !== undefined ? newConfig.badgeText : (newConfig.badge_text !== undefined ? newConfig.badge_text : current.badgeText),
+      couponCode: newConfig.couponCode !== undefined ? newConfig.couponCode : (newConfig.coupon_code !== undefined ? newConfig.coupon_code : current.couponCode),
+      title: newConfig.title !== undefined ? newConfig.title : current.title,
+      subtitle: newConfig.subtitle !== undefined ? newConfig.subtitle : current.subtitle,
+      buttonText: newConfig.buttonText !== undefined ? newConfig.buttonText : (newConfig.button_text !== undefined ? newConfig.button_text : current.buttonText)
+    };
+
+    // Always update local cache & file storage first!
+    local.promoBanner = updated;
     try { writeDb(local); } catch (e) {}
+
+    if (supabase) {
+      try {
+        const payload = {
+          id: 'main_promo',
+          enabled: updated.enabled,
+          badge_text: updated.badgeText,
+          coupon_code: updated.couponCode,
+          title: updated.title,
+          subtitle: updated.subtitle,
+          button_text: updated.buttonText,
+          updated_at: new Date().toISOString()
+        };
+        await supabase.from('promo_banner').upsert([payload]);
+      } catch (e) {
+        console.error('Supabase updatePromoBanner error:', e);
+      }
+    }
+
+    return updated;
   },
 
   validateCoupon: async ({ code, customerPhone, userId, cartTotal }) => {

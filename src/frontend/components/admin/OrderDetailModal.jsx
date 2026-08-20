@@ -73,6 +73,24 @@ export default function OrderDetailModal({ order, onClose, onUpdateStatus }) {
     }
   };
 
+  const formatOrderDateTime = (dateStr) => {
+    if (!dateStr) return null;
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return String(dateStr);
+    return d.toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const orderedAtFormatted = formatOrderDateTime(order.created_at || order.createdAt);
+  const rawPaymentDate = order.payment_date || order.paymentDate || order.paid_at || order.paidAt || (payStatus === 'paid' || payStatus === 'partially_paid' || payMethod === 'online' ? (order.updated_at || order.updatedAt || order.created_at || order.createdAt) : null);
+  const paymentAtFormatted = formatOrderDateTime(rawPaymentDate);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-darkBrown/80 backdrop-blur-sm animate-fade-in">
       <div className="w-full max-w-lg bg-creamCard border border-divineGold/40 rounded-3xl overflow-hidden shadow-2xl p-5 relative max-h-[92vh] overflow-y-auto">
@@ -86,7 +104,18 @@ export default function OrderDetailModal({ order, onClose, onUpdateStatus }) {
         <div className="flex items-center justify-between pb-3 border-b border-divineGold/25 mb-4">
           <div>
             <h2 className="text-lg font-serif font-extrabold text-templeRed">Order #{order.id}</h2>
-            <span className="text-[11px] text-warmMuted block font-medium">{new Date(order.createdAt || order.created_at).toLocaleString()}</span>
+            <div className="space-y-0.5 mt-0.5">
+              {orderedAtFormatted && (
+                <span className="text-[11px] text-darkBrown block font-semibold">
+                  🕒 <strong>Ordered:</strong> {orderedAtFormatted}
+                </span>
+              )}
+              {paymentAtFormatted && (payStatus === 'paid' || payStatus === 'partially_paid' || payMethod === 'online') && (
+                <span className="text-[11px] text-emerald-800 block font-bold">
+                  💳 <strong>Payment Time:</strong> {paymentAtFormatted}
+                </span>
+              )}
+            </div>
           </div>
           <OrderStatusBadge
             status={order.status}

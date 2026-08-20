@@ -40,7 +40,8 @@ import {
   RefreshCw,
   CheckCircle2,
   Check,
-  Calendar
+  Calendar,
+  Home
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -86,7 +87,28 @@ export default function AdminDashboard() {
     );
   }
 
-  // Filter Orders By Selected Month
+  // Filter & Sort Orders By Date & Time (Newest First)
+  const getOrderTimestamp = (o) => {
+    const rawDate = o.created_at || o.createdAt || o.deliveryDate || o.delivery_date;
+    if (!rawDate) return 0;
+    const d = new Date(rawDate);
+    return isNaN(d.getTime()) ? 0 : d.getTime();
+  };
+
+  const formatOrderDateTime = (dateStr) => {
+    if (!dateStr) return null;
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return String(dateStr);
+    return d.toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
   const getOrderMonth = (o) => {
     const rawDate = o.createdAt || o.created_at || o.deliveryDate || o.delivery_date;
     if (!rawDate) return null;
@@ -103,8 +125,13 @@ export default function AdminDashboard() {
     return getOrderMonth(o) === selectedOrderMonth;
   });
 
-  const activeOrders = monthFilteredOrdersList.filter((o) => !['completed', 'delivered', 'cancelled'].includes(o.status));
-  const completedOrders = monthFilteredOrdersList.filter((o) => ['completed', 'delivered', 'cancelled'].includes(o.status));
+  const activeOrders = monthFilteredOrdersList
+    .filter((o) => !['completed', 'delivered', 'cancelled'].includes(o.status))
+    .sort((a, b) => getOrderTimestamp(b) - getOrderTimestamp(a));
+
+  const completedOrders = monthFilteredOrdersList
+    .filter((o) => ['completed', 'delivered', 'cancelled'].includes(o.status))
+    .sort((a, b) => getOrderTimestamp(b) - getOrderTimestamp(a));
 
   // Handlers
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
@@ -339,6 +366,14 @@ export default function AdminDashboard() {
 
           <div className="flex items-center gap-2">
             <button
+              onClick={() => router.push('/')}
+              className="p-2 rounded-xl bg-emerald-500/15 text-emerald-700 border border-emerald-500/30 flex items-center gap-1 font-bold text-xs active:scale-95 transition-all"
+              title="Go to Customer Storefront Home"
+            >
+              <Home className="w-4 h-4" />
+              <span className="text-[11px]">Home</span>
+            </button>
+            <button
               onClick={refreshData}
               className="p-2 rounded-xl bg-creamSurface text-warmMuted hover:text-darkBrown border border-divineGold/30"
               title="Refresh Store Data"
@@ -385,6 +420,18 @@ export default function AdminDashboard() {
 
           {/* Navigation Items */}
           <nav className="p-3 space-y-2 flex-1 overflow-y-auto">
+            {/* Quick Home Storefront Button inside Hamburger Menu / Drawer */}
+            <button
+              onClick={() => {
+                setIsMobileSidebarOpen(false);
+                router.push('/');
+              }}
+              className="w-full py-3.5 px-4 rounded-2xl text-xs font-extrabold flex items-center gap-3 transition-all border text-left bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-creamBg border-emerald-400/40 shadow-sm active:scale-98 mb-3"
+            >
+              <Home className="w-4 h-4 text-creamBg flex-shrink-0" />
+              <span className="truncate">🏠 Customer Storefront Home</span>
+            </button>
+
             {SIDEBAR_ITEMS.map((item) => {
               const Icon = item.icon;
               const isActive = activeSidebarTab === item.id;
@@ -422,6 +469,12 @@ export default function AdminDashboard() {
 
           {/* Sidebar Footer */}
           <div className="p-4 border-t border-divineGold/30 space-y-2">
+            <button
+              onClick={() => router.push('/')}
+              className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-creamBg font-bold text-xs flex items-center justify-center gap-1.5 border border-emerald-500/40 shadow-xs"
+            >
+              <Home className="w-3.5 h-3.5" /> Customer Storefront Home
+            </button>
             <button
               onClick={refreshData}
               className="w-full py-2.5 rounded-xl bg-creamSurface hover:bg-creamCard text-darkBrown font-bold text-xs flex items-center justify-center gap-1.5 border border-divineGold/30"
@@ -507,7 +560,7 @@ export default function AdminDashboard() {
 
               {/* ACTIVE ORDERS LIST */}
               {orderSubTab === 'active' && (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {activeOrders.length === 0 ? (
                     <div className="text-center py-12 bg-creamCard rounded-2xl border border-divineGold/30 shadow-sm space-y-2">
                       <Inbox className="w-10 h-10 text-warmMuted mx-auto" />
@@ -521,46 +574,64 @@ export default function AdminDashboard() {
                       const isPartiallyPaid = payStatus === 'partially_paid';
                       const needsPaymentLink = payMethod === 'pay_later' && !isFullyPaid;
 
-                      const advanceAmt = ord.advance_amount || ord.advanceAmount || Math.round((ord.total_amount || ord.total || 0) / 2);
+                      const totalAmt = Number(ord.total_amount !== undefined ? ord.total_amount : (ord.total || 0));
+                      const advanceAmt = Number(ord.advance_amount || ord.advanceAmount || Math.round(totalAmt / 2));
+                      const remainingAmt = Number(ord.remaining_amount || ord.remainingAmount || (totalAmt - (isPartiallyPaid ? advanceAmt : 0)));
+
+                      const orderedAtFormatted = formatOrderDateTime(ord.created_at || ord.createdAt);
+                      const rawPaymentDate = ord.payment_date || ord.paymentDate || ord.paid_at || ord.paidAt || (isFullyPaid || isPartiallyPaid ? (ord.updated_at || ord.updatedAt || ord.created_at || ord.createdAt) : null);
+                      const paymentAtFormatted = formatOrderDateTime(rawPaymentDate);
 
                       return (
-                        <div key={ord.id} className="bg-creamCard p-4 rounded-2xl border border-divineGold/35 space-y-3 shadow-sm">
-                          <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-divineGold/20">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-serif font-extrabold text-base text-darkBrown">
+                        <div key={ord.id} className="bg-creamCard p-5 rounded-3xl border border-divineGold/35 space-y-4 shadow-sm hover:shadow-md transition-all">
+                          {/* HEADER BAR: ORDER ID, BADGES, EXACT TIMINGS & STATUS BADGE */}
+                          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-divineGold/25">
+                            <div className="space-y-1.5">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="font-serif font-extrabold text-base sm:text-lg text-darkBrown">
                                   Order #{ord.id}
                                 </span>
 
                                 {/* PAYMENT STATUS BADGE */}
                                 {isFullyPaid && (
-                                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-800 font-extrabold text-[10px] border border-emerald-500/30 flex items-center gap-1">
+                                  <span className="px-3 py-0.5 rounded-full bg-emerald-500/15 text-emerald-800 font-extrabold text-[10px] border border-emerald-500/30 flex items-center gap-1">
                                     <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Paid ✓
                                   </span>
                                 )}
 
                                 {isPartiallyPaid && (
-                                  <span className="px-2.5 py-0.5 rounded-full bg-marigold/15 text-marigoldDark font-extrabold text-[10px] border border-marigold/30 flex items-center gap-1">
+                                  <span className="px-3 py-0.5 rounded-full bg-marigold/15 text-marigoldDark font-extrabold text-[10px] border border-marigold/30 flex items-center gap-1">
                                     <Sparkles className="w-3 h-3 text-marigold" /> 50% Advance Paid (₹{advanceAmt})
                                   </span>
                                 )}
 
                                 {!isFullyPaid && !isPartiallyPaid && (
-                                  <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-900 font-extrabold text-[10px] border border-amber-500/30">
+                                  <span className="px-3 py-0.5 rounded-full bg-amber-500/15 text-amber-900 font-extrabold text-[10px] border border-amber-500/30">
                                     Payment Pending ⏳
                                   </span>
                                 )}
 
                                 {needsPaymentLink && (
-                                  <span className="px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-900 font-extrabold text-[10px] border border-purple-500/40 animate-pulse flex items-center gap-1">
+                                  <span className="px-3 py-0.5 rounded-full bg-purple-500/20 text-purple-900 font-extrabold text-[10px] border border-purple-500/40 animate-pulse flex items-center gap-1">
                                     <AlertCircle className="w-3 h-3 text-purple-700" /> Needs Link Sent
                                   </span>
                                 )}
                               </div>
 
-                              <span className="text-xs text-warmMuted block font-medium mt-0.5">
-                                {ord.customerName} • {ord.customerPhone}
-                              </span>
+                              {/* TIMINGS: ORDER PLACEMENT TIME & PAYMENT TIME */}
+                              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium">
+                                {orderedAtFormatted && (
+                                  <span className="flex items-center gap-1.5 text-darkBrown font-semibold bg-creamSurface px-2.5 py-1 rounded-xl border border-divineGold/25 shadow-2xs">
+                                    <Calendar className="w-3.5 h-3.5 text-marigold" /> Ordered: <strong className="text-templeRed font-bold">{orderedAtFormatted}</strong>
+                                  </span>
+                                )}
+
+                                {(isFullyPaid || isPartiallyPaid) && paymentAtFormatted && (
+                                  <span className="flex items-center gap-1.5 text-emerald-900 font-semibold bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200/80 shadow-2xs">
+                                    <CreditCard className="w-3.5 h-3.5 text-emerald-600" /> Payment Done: <strong className="text-emerald-800 font-bold">{paymentAtFormatted}</strong>
+                                  </span>
+                                )}
+                              </div>
                             </div>
 
                             <OrderStatusBadge
@@ -569,59 +640,98 @@ export default function AdminDashboard() {
                             />
                           </div>
 
-                          <div className="text-xs text-darkBrown space-y-1">
-                            <p className="flex items-center gap-1.5 font-medium">
-                              📍 <strong>Delivery Address:</strong> {ord.deliveryAddress || ord.customerAddress}
-                            </p>
-                            <p className="flex items-center gap-1.5 font-medium">
-                              📅 <strong>Schedule:</strong> {ord.deliveryDate} ({ord.deliveryTimeSlot})
-                            </p>
-                            {ord.orderNote && (
-                              <p className="text-marigoldDark italic text-xs font-semibold p-2 rounded-xl bg-marigold/10 border border-marigold/20">
-                                📝 Note: "{ord.orderNote}"
+                          {/* FORMAL CUSTOMER & DELIVERY INFO GRID */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-darkBrown">
+                            <div className="bg-creamSurface p-3.5 rounded-2xl border border-divineGold/25 space-y-1.5">
+                              <div className="font-bold text-templeRed flex items-center gap-1.5 border-b border-divineGold/15 pb-1 text-xs">
+                                👤 Customer Details
+                              </div>
+                              <p className="font-semibold text-darkBrown">
+                                <strong>Name:</strong> {ord.customerName}
                               </p>
-                            )}
+                              <p className="font-semibold text-darkBrown">
+                                <strong>Phone:</strong> {ord.customerPhone}
+                              </p>
+                              <p className="font-semibold text-darkBrown">
+                                <strong>Payment Method:</strong> {payMethod === 'online' ? 'Online Payment (Razorpay)' : payMethod === 'half_advance' ? '50% Advance + Balance COD/UPI' : 'Cash on Confirmation (COD)'}
+                              </p>
+                            </div>
+
+                            <div className="bg-creamSurface p-3.5 rounded-2xl border border-divineGold/25 space-y-1.5">
+                              <div className="font-bold text-templeRed flex items-center gap-1.5 border-b border-divineGold/15 pb-1 text-xs">
+                                📍 Delivery & Schedule Info
+                              </div>
+                              <p className="font-semibold text-darkBrown truncate" title={ord.deliveryAddress || ord.customerAddress}>
+                                <strong>Address:</strong> {ord.deliveryAddress || ord.customerAddress || 'N/A'}
+                              </p>
+                              <p className="font-semibold text-darkBrown">
+                                <strong>Slot:</strong> {ord.deliveryDate} ({ord.deliveryTimeSlot || 'Morning Delivery'})
+                              </p>
+                              {ord.orderNote && (
+                                <p className="text-marigoldDark italic text-xs font-semibold p-1.5 rounded-lg bg-marigold/10 border border-marigold/20">
+                                  📝 Note: "{ord.orderNote}"
+                                </p>
+                              )}
+                            </div>
                           </div>
 
-                          {/* Items List */}
+                          {/* ORDERED ITEMS LIST */}
                           {Array.isArray(ord.items) && ord.items.length > 0 && (
-                            <div className="bg-creamSurface p-2.5 rounded-xl border border-divineGold/25 space-y-1.5">
+                            <div className="bg-creamSurface p-3.5 rounded-2xl border border-divineGold/25 space-y-2">
+                              <div className="text-[11px] font-bold uppercase tracking-wider text-warmMuted flex items-center justify-between border-b border-divineGold/15 pb-1">
+                                <span>Ordered Items ({ord.items.length})</span>
+                                <span>Qty & Weight</span>
+                              </div>
                               {ord.items.map((it, idx) => {
                                 const { img: itemImg, unit: unitDisplay } = getOrderItemDetails(it, products);
+                                const itemTotal = (Number(it.price) || 0) * (Number(it.quantity) || 1);
 
                                 return (
-                                  <div key={idx} className="flex items-center gap-2.5 text-xs text-darkBrown">
-                                    <div className="relative w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 bg-creamCard border border-divineGold/30">
-                                      {itemImg ? (
-                                        <img src={itemImg} alt={it.nameEn || 'Flower'} className="w-full h-full object-cover" />
-                                      ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-warmMuted text-xs">🌸</div>
-                                      )}
+                                  <div key={idx} className="flex items-center justify-between gap-3 text-xs text-darkBrown">
+                                    <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                                      <div className="relative w-9 h-9 rounded-xl overflow-hidden flex-shrink-0 bg-creamCard border border-divineGold/30">
+                                        {itemImg ? (
+                                          <img src={itemImg} alt={it.nameEn || 'Flower'} className="w-full h-full object-cover" />
+                                        ) : (
+                                          <div className="w-full h-full flex items-center justify-center text-warmMuted text-xs">🌸</div>
+                                        )}
+                                      </div>
+                                      <div className="truncate">
+                                        <span className="font-bold text-xs text-darkBrown block truncate">{it.nameEn || it.name}</span>
+                                        <span className="text-[10px] text-warmMuted font-semibold">₹{it.price} / {unitDisplay}</span>
+                                      </div>
                                     </div>
-                                    <span className="font-semibold text-xs flex-1 truncate">{it.nameEn || it.name}</span>
-                                    <span className="text-[11px] text-warmMuted font-bold">
-                                      x{it.quantity} ({unitDisplay})
-                                    </span>
+
+                                    <div className="text-right flex-shrink-0">
+                                      <span className="font-extrabold text-xs text-darkBrown block">x{it.quantity}</span>
+                                      <span className="text-[11px] font-bold text-templeRed">₹{itemTotal}</span>
+                                    </div>
                                   </div>
                                 );
                               })}
                             </div>
                           )}
 
-                          {/* ACTION BUTTONS & CONDITIONAL PAYMENT MARKING / WHATSAPP MESSAGES */}
-                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-2 border-t border-divineGold/20">
+                          {/* FINANCIAL SUMMARY & ACTION BUTTONS */}
+                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2 border-t border-divineGold/25">
                             <div>
-                              <span className="text-base font-extrabold text-templeRed block">
-                                Total: ₹{ord.total_amount || ord.total}
-                              </span>
-                              <span className="text-[10px] text-warmMuted font-bold uppercase tracking-wider block">
-                                Method: {payMethod} | Status: {payStatus}
+                              <div className="flex items-baseline gap-2">
+                                <span className="text-lg font-extrabold text-templeRed">
+                                  Total: ₹{totalAmt}
+                                </span>
+                                {isPartiallyPaid && (
+                                  <span className="text-xs font-bold text-emerald-700">
+                                    (₹{advanceAmt} Paid | Balance: ₹{remainingAmt})
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[11px] text-warmMuted font-bold block">
+                                Payment Status: <span className="uppercase text-darkBrown">{payStatus}</span> ({payMethod})
                               </span>
                             </div>
 
                             <div className="flex flex-wrap items-center gap-2">
                               {isFullyPaid ? (
-                                /* IF PAYMENT IS ALREADY DONE -> SHOW THANK YOU MESSAGE BUTTON ONLY */
                                 <a
                                   href={generateThankYouWhatsAppLink(ord)}
                                   target="_blank"
@@ -629,10 +739,9 @@ export default function AdminDashboard() {
                                   className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-creamBg font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 active:scale-95 transition-all"
                                 >
                                   <MessageCircle className="w-3.5 h-3.5" />
-                                  Send Thank You for Ordering 🌸
+                                  Send Thank You Message 🌸
                                 </a>
                               ) : (
-                                /* IF PAYMENT IS PENDING / NOT FULLY PAID -> SHOW MARK PAID & SEND LINK/REMINDER */
                                 <>
                                   <button
                                     onClick={() => handleMarkPaymentPaid(ord.id)}
@@ -662,10 +771,9 @@ export default function AdminDashboard() {
                                 </>
                               )}
 
-                              {/* Details Modal */}
                               <button
                                 onClick={() => setSelectedOrder(ord)}
-                                className="px-2.5 py-2 rounded-xl bg-creamSurface hover:bg-marigold/10 text-darkBrown text-xs font-semibold flex items-center gap-1 border border-divineGold/30"
+                                className="px-3 py-2 rounded-xl bg-creamSurface hover:bg-marigold/10 text-darkBrown text-xs font-bold flex items-center gap-1 border border-divineGold/30"
                               >
                                 <Eye className="w-3.5 h-3.5 text-marigold" /> Details
                               </button>
@@ -680,36 +788,74 @@ export default function AdminDashboard() {
 
               {/* COMPLETED ORDERS LIST */}
               {orderSubTab === 'completed' && (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {completedOrders.length === 0 ? (
                     <div className="text-center py-12 bg-creamCard rounded-2xl border border-divineGold/30 shadow-sm space-y-2">
                       <CheckCircle className="w-10 h-10 text-warmMuted mx-auto" />
                       <p className="text-xs text-warmMuted font-medium">No completed or cancelled orders yet.</p>
                     </div>
                   ) : (
-                    completedOrders.map((ord) => (
-                      <div key={ord.id} className="bg-creamCard p-4 rounded-2xl border border-divineGold/35 space-y-2 shadow-sm opacity-90">
-                        <div className="flex items-center justify-between pb-2 border-b border-divineGold/20">
-                          <div>
-                            <span className="font-extrabold text-sm text-darkBrown">Order #{ord.id}</span>
-                            <span className="text-[10px] text-warmMuted block font-medium">{ord.customerName} • {ord.customerPhone}</span>
+                    completedOrders.map((ord) => {
+                      const payMethod = ord.payment_method || ord.paymentMethod || 'cod';
+                      const payStatus = ord.payment_status || ord.paymentStatus || 'pending';
+                      const isFullyPaid = payStatus === 'paid' || payMethod === 'online';
+                      const isPartiallyPaid = payStatus === 'partially_paid';
+
+                      const totalAmt = Number(ord.total_amount !== undefined ? ord.total_amount : (ord.total || 0));
+                      const advanceAmt = Number(ord.advance_amount || ord.advanceAmount || Math.round(totalAmt / 2));
+
+                      const orderedAtFormatted = formatOrderDateTime(ord.created_at || ord.createdAt);
+                      const rawPaymentDate = ord.payment_date || ord.paymentDate || ord.paid_at || ord.paidAt || (isFullyPaid || isPartiallyPaid ? (ord.updated_at || ord.updatedAt || ord.created_at || ord.createdAt) : null);
+                      const paymentAtFormatted = formatOrderDateTime(rawPaymentDate);
+
+                      return (
+                        <div key={ord.id} className="bg-creamCard p-4 rounded-3xl border border-divineGold/35 space-y-3 shadow-sm opacity-95">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-divineGold/20">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-extrabold text-sm text-darkBrown">Order #{ord.id}</span>
+                                {isFullyPaid && (
+                                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-800 font-extrabold text-[9px] border border-emerald-500/30">
+                                    Paid ✓
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[11px] text-warmMuted block font-medium mt-0.5">
+                                {ord.customerName} • {ord.customerPhone}
+                              </span>
+                            </div>
+
+                            <OrderStatusBadge
+                              status={ord.status}
+                              onChangeStatus={(s) => handleUpdateOrderStatus(ord.id, s)}
+                            />
                           </div>
-                          <OrderStatusBadge
-                            status={ord.status}
-                            onChangeStatus={(s) => handleUpdateOrderStatus(ord.id, s)}
-                          />
+
+                          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-warmMuted">
+                            {orderedAtFormatted && (
+                              <span className="flex items-center gap-1 text-darkBrown">
+                                🕒 Ordered: <strong>{orderedAtFormatted}</strong>
+                              </span>
+                            )}
+                            {paymentAtFormatted && (
+                              <span className="flex items-center gap-1 text-emerald-800">
+                                💳 Payment: <strong>{paymentAtFormatted}</strong>
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center justify-between text-xs pt-1 border-t border-divineGold/15">
+                            <span className="font-extrabold text-templeRed text-sm">Total: ₹{totalAmt}</span>
+                            <button
+                              onClick={() => setSelectedOrder(ord)}
+                              className="px-3 py-1.5 rounded-xl bg-creamSurface text-darkBrown text-xs font-bold flex items-center gap-1 border border-divineGold/30"
+                            >
+                              <Eye className="w-3.5 h-3.5 text-marigold" /> Details
+                            </button>
+                          </div>
                         </div>
-                        <div className="flex items-center justify-between text-xs pt-1">
-                          <span className="font-extrabold text-templeRed">Total: ₹{ord.total_amount || ord.total}</span>
-                          <button
-                            onClick={() => setSelectedOrder(ord)}
-                            className="px-2.5 py-1.5 rounded-xl bg-creamSurface text-darkBrown text-xs font-semibold flex items-center gap-1 border border-divineGold/30"
-                          >
-                            <Eye className="w-3.5 h-3.5" /> Details
-                          </button>
-                        </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               )}
