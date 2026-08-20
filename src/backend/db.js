@@ -17,20 +17,6 @@ const DEFAULT_PROMO_BANNER = {
 
 const INITIAL_COUPONS = [
   {
-    id: 'c_bloom10',
-    code: 'BLOOM10',
-    discount_type: 'percentage',
-    discount_value: 10,
-    min_order_value: 0,
-    max_discount_amount: 100,
-    is_first_order_only: false,
-    is_active: true,
-    usage_limit_per_customer: 5,
-    valid_from: null,
-    valid_until: null,
-    created_at: new Date().toISOString()
-  },
-  {
     id: 'c_welcome50',
     code: 'WELCOME50',
     discount_type: 'flat',
